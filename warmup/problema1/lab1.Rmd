@@ -1,0 +1,27 @@
+---
+title: "Análise de Dados 1 - Lab 1"
+output: html_notebook
+---
+
+Marcos Antônio Silva Nascimento
+12 de maio de 2017
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(plotly)
+
+dados = read.csv(file = 'dados/ano-atual.csv')
+deputados.pb <- dados %>% filter(sgUF == "PB") %>% distinct(txNomeParlamentar)
+
+deputados.pb <- c('AGUINALDO RIBEIRO','BENJAMIN MARANHÃO','DAMIÃO FELICIANO','EFRAIM FILHO','HUGO MOTTA','LUIZ COUTO','MANOEL JUNIOR','MARCONDES GADELHA','PEDRO CUNHA LIMA','ROMULO GOUVEIA','VENEZIANO VITAL DO RÊGO','WELLINGTON ROBERTO','WILSON FILHO')
+
+qtd.gastos.deputados.pb <- dados %>% filter(txNomeParlamentar %in% deputados.pb) %>%
+  group_by(txtDescricao) %>% summarise(total = sum(vlrDocumento))
+
+histograma1 <- ggplot(data=qtd.gastos.deputados.pb, aes(x=reorder(txtDescricao, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Panorama geral - Gastos deputados federais", x = "Nome do gasto", y = "Valor total")
+
+histograma1
+
+```
