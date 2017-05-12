@@ -1,0 +1,52 @@
+---
+title: "Problema1-Checkpoint4"
+output: html_notebook
+---
+
+Marcos Nascimento
+11 de maio de 2017
+
+#dependencias = c("dplyr", "ggplot2", "GGally", "readr", "plotly")
+#devtools::install_github("ropensci/plotly")
+#install.packages(dependencias)
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(plotly)
+
+dados = read.csv(file = 'dados/ano-atual.csv')
+head(dados)
+```
+
+#(Pergunta 1) Dando um foco no nosso estado (Paraíba), quais fornecedores mais se destacam aqui no nosso estado, essas empresas são realmente daqui? Se sim, qual a relação entre nossos deputados e esses fornecedores?
+
+```{r}
+deputados.pb <- dados %>% filter(sgUF == 'PB') %>% select(txNomeParlamentar, sgPartido) %>% distinct()
+
+deputados.pb <- c("AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO")
+
+fornecedores.deputados.pb <- dados %>%
+  filter(txNomeParlamentar %in% deputados.pb ) %>%
+  select(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao,vlrDocumento) %>%
+  mutate(txtCNPJCPF = as.factor(txtCNPJCPF)) %>%
+  group_by(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao) %>%
+  summarise(valor.total = sum(vlrDocumento))
+```
+
+#(Pergunta 2) Analisando o gasto dos deputados com passagens aéreas, é esperado que esses gastos tenha uma correlação com o estado de origem do deputado, isso realmente existe? Existem outliers nesses gastos, se sim, como podemos entendê-los?
+
+```{r}
+cia.aereas <- c("Cia Aérea - TAM", "Avianca", "Azul Linhas Aéreas", "Cia Aérea - AVIANCA", "Cia Aérea - AZUL","Cia Aérea - GOL", "GOL - LINHAS AÉREAS INTELIGENTES", "GOL - LINHAS AÉREAS S/A", "Cia Aérea - TAM", "TAM LINAS AÉREAS S.A", "Tam Linhas Aéreas")
+
+gastos.cia.aereas <- fornecedores.deputados.pb %>% filter(txtFornecedor %in% cia.aereas) %>% group_by(txNomeParlamentar) %>% summarise(valor.total = sum(valor.total))
+
+ranking.gastos <- plot_ly(gastos.cia.aereas,
+  x = reorder(gastos.cia.aereas$txNomeParlamentar, gastos.cia.aereas$valor.total),
+  y = gastos.cia.aereas$valor.total,
+  name = "Gastos Passagens Aéreas",
+  type = "bar")
+
+ranking.gastos
+```
+
