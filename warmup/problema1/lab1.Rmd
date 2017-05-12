@@ -1,9 +1,13 @@
 ---
-title: "Análise de Dados 1 - Lab 1"
+title: "Analise de Dados 1 - Lab 1"
 output: html_notebook
 ---
 
-Marcos Antônio Silva Nascimento
+#dependencias = c("dplyr", "ggplot2", "GGally", "readr", "plotly")
+#devtools::install_github("ropensci/plotly")
+#install.packages(dependencias)
+
+Marcos Antonio Silva Nascimento
 12 de maio de 2017
 
 ```{r}
@@ -14,7 +18,7 @@ library(plotly)
 dados = read.csv(file = 'dados/ano-atual.csv')
 deputados.pb <- dados %>% filter(sgUF == "PB") %>% distinct(txNomeParlamentar)
 
-deputados.pb <- c('AGUINALDO RIBEIRO','BENJAMIN MARANHÃO','DAMIÃO FELICIANO','EFRAIM FILHO','HUGO MOTTA','LUIZ COUTO','MANOEL JUNIOR','MARCONDES GADELHA','PEDRO CUNHA LIMA','ROMULO GOUVEIA','VENEZIANO VITAL DO RÊGO','WELLINGTON ROBERTO','WILSON FILHO')
+deputados.pb <- c('AGUINALDO RIBEIRO','BENJAMIN MARANHAO','DAMIAO FELICIANO','EFRAIM FILHO','HUGO MOTTA','LUIZ COUTO','MANOEL JUNIOR','MARCONDES GADELHA','PEDRO CUNHA LIMA','ROMULO GOUVEIA','VENEZIANO VITAL DO REGO','WELLINGTON ROBERTO','WILSON FILHO')
 
 qtd.gastos.deputados.pb <- dados %>% filter(txNomeParlamentar %in% deputados.pb) %>%
   group_by(txtDescricao) %>% summarise(total = sum(vlrDocumento))
@@ -23,5 +27,26 @@ histograma1 <- ggplot(data=qtd.gastos.deputados.pb, aes(x=reorder(txtDescricao, 
   labs(title = "Panorama geral - Gastos deputados federais", x = "Nome do gasto", y = "Valor total")
 
 histograma1
+#############################################################
+qtd.gastos <- dados %>% group_by(txtDescricao) %>% summarise(total = sum(vlrDocumento))
 
+histograma2 <- ggplot(data=qtd.gastos, aes(x=reorder(txtDescricao, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Panorama geral - Gastos deputados federais", x = "Nome do gasto", y = "Valor total")
+
+histograma2
+###########################################################
+qtd.deputados.partido <- dados %>% group_by(sgPartido, txNomeParlamentar) %>% distinct() %>% group_by(sgPartido) %>% summarise(total = n()) 
+
+histograma3 <- ggplot(data=qtd.deputados.partido, aes(x=reorder(sgPartido, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Qtd deputados por partido", x = "sgPartido", y = "Total")
+
+histograma3
+#########################################################
+
+qtd.gastos.partido <- dados %>% group_by(sgPartido) %>% summarise(total = sum(vlrDocumento))
+
+histograma4 <- ggplot(data=qtd.gastos.partido, aes(x=reorder(sgPartido, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Qtd gastos por partido", x = "sgPartido", y = "Total")
+
+histograma4
 ```
