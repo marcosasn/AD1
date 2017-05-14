@@ -28,6 +28,9 @@ histograma1 <- ggplot(data=qtd.gastos.deputados.pb, aes(x=reorder(txtDescricao, 
 
 histograma1
 #############################################################
+```
+
+```{r}
 qtd.gastos <- dados %>% group_by(txtDescricao) %>% summarise(total = sum(vlrDocumento))
 
 histograma2 <- ggplot(data=qtd.gastos, aes(x=reorder(txtDescricao, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
@@ -35,6 +38,11 @@ histograma2 <- ggplot(data=qtd.gastos, aes(x=reorder(txtDescricao, total), y=tot
 
 histograma2
 ###########################################################
+
+```
+
+
+```{r}
 qtd.deputados.partido <- dados %>% group_by(sgPartido, txNomeParlamentar) %>% distinct() %>% group_by(sgPartido) %>% summarise(total = n()) 
 
 histograma3 <- ggplot(data=qtd.deputados.partido, aes(x=reorder(sgPartido, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
@@ -42,11 +50,36 @@ histograma3 <- ggplot(data=qtd.deputados.partido, aes(x=reorder(sgPartido, total
 
 histograma3
 #########################################################
+```
 
+```{r}
 qtd.gastos.partido <- dados %>% group_by(sgPartido) %>% summarise(total = sum(vlrDocumento))
 
 histograma4 <- ggplot(data=qtd.gastos.partido, aes(x=reorder(sgPartido, total), y=total)) + geom_bar(stat = "identity") + coord_flip() +  
   labs(title = "Qtd gastos por partido", x = "sgPartido", y = "Total")
 
 histograma4
+##########################################################
+
 ```
+
+```{r}
+media.gastos.partido <- dados %>% filter(sgPartido != 'NA') %>% group_by(sgPartido) %>% summarise(media = mean(vlrDocumento))
+histograma5 <- ggplot(data=media.gastos.partido, aes(x=reorder(sgPartido, media), y=media)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Média gastos por partido", x = "sgPartido", y = "média")
+
+histograma5
+####################################################################
+
+```
+
+```{r}
+media.gastos.pmdb <- dados %>% filter(sgPartido == 'PMDB') %>% group_by(txtDescricao) %>% summarise(media = mean(vlrDocumento))
+
+histograma6 <- ggplot(data=media.gastos.pmdb, aes(x=reorder(txtDescricao, media), y=media)) + geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Total gastos PMDB por descrição", x = "txtDescricao", y = "media")
+
+histograma6
+
+```
+
