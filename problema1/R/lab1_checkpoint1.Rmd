@@ -1,0 +1,18 @@
+---
+title: "Lab 1 - checkpoint 1"
+output: html_notebook
+---
+
+Marcos Nascimento
+19 de maio de 2017
+
+```{r}
+library(tidyverse) # carrega os pacotes ggplot2, readr, tidyr e dplyr
+
+# tente usar sempre read_csv em vez de read.csv
+dados = read_csv(file = "../dados/series_from_imdb.csv")
+
+dados = dados %>% filter(series_name %in% c("13 Reasons Why", "Sense8", "Black Mirror"))
+glimpse(dados)
+
+```
