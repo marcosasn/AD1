@@ -1,5 +1,5 @@
 ---
-title: "Lab 1 - checkpoint 1"
+title: "Lab 1 - Checkpoint 1"
 output: html_notebook
 ---
 
@@ -10,24 +10,21 @@ Marcos Nascimento
 library("dplyr")
 library("tidyr")
 library("ggplot2")
-library("readr")# carrega os pacotes ggplot2, readr, tidyr e dplyr
+library("readr")
 
-# tente usar sempre read_csv em vez de read.csv
 dados = read_csv(file = "../dados/series_from_imdb.csv")
-
 dados = dados %>% filter(series_name %in% c("13 Reasons Why", "Sense8", "Black Mirror"))
 ```
+a. Qual das series que voce escolheu e mais bem avaliada no IMDB? A diferenca e grande? Pequena?
 
-a. Qual das séries que você escolheu e mais bem avaliada no IMDB? A diferença é grande? Pequena?
-
-Aparentemente a série mais bem avaliada é a Sense8 se observar-mos o gráfico de dispersão das 3 séries escolhidas.
+Aparentemente a serie mais bem avaliada e a Sense8 se observar-mos o grafico de dispersao.
 ```{r}
 dados %>% 
     ggplot(aes(x = series_name, y = UserRating)) + 
     geom_jitter(width = .1, color = "red") 
 ```
 
-Para observar melhor qual delas é mais bem avaliada segundo o UserRating ou classificação do usuário vamos olhar para o gráfico de box plot de cada uma das séries.
+Para observar melhor qual delas e mais bem avaliada segundo o UserRating ou classificacao do usuario vamos olhar para o grafico de box plot de cada uma das series.
 ```{r}
 dados %>% 
     ggplot(aes(x = series_name, y = UserRating)) + 
@@ -36,10 +33,10 @@ dados %>%
 
 ```
 
-Olhando para o gráfico podemos usar como métrica de avaliação a mediana das classificações dos usuários, desta forma fica claro que Sense8 é a série mais bem avaliada com relação as demais. A mediana é uma boa métrica porque ajuda a perceber onde fica a maior concentração de avaliações daquela série diminuindo o viés de outliers. Ainda sobre a diferença de cada uma das séries vemos que a mediana de todas as séries está entre 8 e 9 sendo pequena a diferença das avaliações entre 13 Reasons Why e Black Mirror e grande entre Sense8 e 13 Reasons Why e Sense8 e Black Mirror como vemos na imagem.
+Olhando para o grafico podemos usar como metrica de avaliacao a mediana das classificacoes dos usuarios, desta forma fica claro que Sense8 e a serie mais bem avaliada com relacao as demais. A mediana e uma boa metrica porque ajuda a perceber onde fica a maior concentracao de avaliacoes daquela serie diminuindo o vies de outliers. Ainda sobre a diferenca de cada uma das series vemos que a mediana de todas as series esta entre 8 e 9 sendo pequena a diferenca das avaliacoes entre 13 Reasons Why e Black Mirror e grande entre Sense8 e 13 Reasons Why e Sense8 e Black Mirror como vemos na imagem.
 
-b. Qual das séries que você escolheu tem episódios de qualidade mais irregular segundo o IMDB? A diferença é grande? Pequena?
-Repare que as perguntas deixam para você a responsabilidade de decidir como analisar quem é mais bem avaliada, o que é irregularidade entre episódios, etc.
+b. Qual das series que voce escolheu tem episodios de qualidade mais irregular segundo o IMDB? A diferenca e grande? Pequena?
+Repare que as perguntas deixam para voce a responsabilidade de decidir como analisar quem sao mais bem avaliada, o que e irregularidade entre episodios, etc.
 ```{r}
 dados %>% 
     ggplot(aes(x = series_name, y = UserRating)) + 
@@ -49,11 +46,5 @@ dados %>%
 
 ```
 
-Olhando para o gráfico de violino podemos observar qual das séries possui classificação imdb mais irregular ou que mais varia. A série Sense8 possui uma maior variação de notas de classificação como podemos ver a cima.
-
-```{r}
-dados %>% ggplot(aes(UserRating, fill = series_name)) + 
-  geom_histogram(alpha = 0.5, position = 'identity')
-
-```
+Olhando para o grafico de violino podemos observar qual das series possui classificacao imdb mais irregular ou que mais varia. A serie Sense8 possui uma maior variacao de notas de classificacao como podemos ver a cima. A s�rie Black Mirror tamb�m possui uma maior varia��o. Dentre as 3 apenas 13 Reasons Why possui uma maior regularidade de qualidade. Quanto a diferen�a 13 Reasons Why possui uma grande diferen�a de regularidade se comparado a Black Mirror e a Sense8.  
 
