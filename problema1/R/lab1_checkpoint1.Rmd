@@ -1,10 +1,9 @@
 ---
-title: "Lab 1 - Checkpoint 1"
+title: "Problema 1 - Checkpoint 1"
+author: Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)
+date: 19 de maio de 2017 
 output: html_notebook
 ---
-
-Marcos Nascimento
-19 de maio de 2017
 
 ```{r}
 library("dplyr")
@@ -15,9 +14,163 @@ library("readr")
 dados = read_csv(file = "../dados/series_from_imdb.csv")
 dados = dados %>% filter(series_name %in% c("13 Reasons Why", "Sense8", "Black Mirror"))
 ```
-a. Qual das series que voce escolheu e mais bem avaliada no IMDB? A diferenca e grande? Pequena?
+# `Sense8`
+```{r}
+dados %>%
+  filter(series_name == "Sense8") %>%
+    ggplot(aes(x = series_name, y = UserRating)) + 
+    geom_jitter(width = .1, color = "red") +
+  labs(title = "Distribuição de UserRating de Sense8")
+```
+Podemos perceber que segundo a classificacao de usuarios IMDB Sense8 tem apenas um valor estranho. Existe pouca variação e dentre os valores frequentes tem a classificação 9 como podemos ver no histograma abaixo.
+```{r}
+dados %>%
+  filter(series_name == "Sense8") %>%
+    ggplot(aes(x = UserRating)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+  labs(title = "Histograma de UserRating de Sense8", y = "frequencia")
+```
 
-Aparentemente a serie mais bem avaliada e a Sense8 se observar-mos o grafico de dispersao.
+Como a frequência da classificação 9 é maior então espera-se que a mediana seja 9 também, logo, a média(8.9) é representativa da distribuição de classificação de Sense8.
+```{r}
+median((dados %>%  filter(series_name == "Sense8"))$UserRating)
+mean((dados %>%  filter(series_name == "Sense8"))$UserRating)
+```
+
+Podemos também observar a distribuição de classificação por temporada de Sense8. A segunda temporada é melhor classificada se comparada a primeira temporada, em termos de mediana, e a variação da classificação da primeira foi maior do que na segunda.
+```{r}
+dados %>%  filter(series_name == "Sense8") %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")
+```
+
+Com o passar dos episódios de Sense8 da primeira temporada a classificação só subiu. A classificação da segunda temporada teve o mesmo comportamento estando com a classificação ainda superior a da primeira temporada.
+```{r}
+dados %>%  filter(series_name == "Sense8") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point()
+```
+
+Podemos ainda verificar a existência de uma correlação entre o episódio da série e sua classificação e podemos perceber que a mesma existe. Existe uma correlação linear forte entre essas duas variáveis, ou seja, o episódio da série influencia diretamente na classificação do episódio e virse e versa.
+```{r}
+dados %>%  filter(series_name == "Sense8") %>% 
+    group_by(season) %>% 
+    summarise(correlacao_linear = cor(season_ep, UserRating, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(season_ep, UserRating, 
+                                       method = "kendall"))
+```
+
+# `Black Mirror`
+```{r}
+dados %>%
+  filter(series_name == "Black Mirror") %>%
+    ggplot(aes(x = series_name, y = UserRating)) + 
+    geom_jitter(width = .1, color = "red") +
+  labs(title = "Distribuição de UserRating de Black Mirror")
+```
+Podemos perceber que segundo a classificacao de usuarios IMDB Black Mirror tem apenas um valor estranho. Existe pouca variação e dentre os valores frequentes temos as classificações de 8.0 e 8.5 como podemos ver no histograma abaixo.
+
+```{r}
+dados %>%
+  filter(series_name == "Black Mirror") %>%
+    ggplot(aes(x = UserRating)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+  labs(title = "Histograma de UserRating de Black Mirror", y = "frequencia")
+```
+
+
+Como a frequência da classificação concentra-se em 8.0 e 8.5 então espera-se que a mediana esteja neste entorno. Neste caso, houve a coincidência da mediana e da média, 8.3, que também é representativa da distribuição de classificação de Black Mirror.
+```{r}
+median((dados %>%  filter(series_name == "Black Mirror"))$UserRating)
+mean((dados %>%  filter(series_name == "Black Mirror"))$UserRating)
+```
+
+Podemos também observar a distribuição de classificação por temporada de Black Mirror. A terceira temporada é melhor classificada se comparada a primeira e a segunda temporada, em termos de mediana, e a variação da classificação da segunda temporada foi maior do que na primeira e terceira. Pode-se observar também que a temporada com menor classificação dentre as 3 foi a segunda temporada.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")
+```
+
+Com o passar dos episódios de Black Mirror a única temporada que a classificação só subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variação da classificação. Dentre as variações a temporada que mais variou a classificação sendo a segunda temporada (clasificações de 7 até ~9).
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point()
+```
+
+Quanto a correlação entre o episódio da série e sua classificação e podemos perceber que a existência de uma correlação linear forte entre essas duas variáveis apenas na primeira temporada.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+    group_by(season) %>% 
+    summarise(correlacao_linear = cor(season_ep, UserRating, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(season_ep, UserRating, 
+                                       method = "kendall"))
+```
+
+# `13 Reasons Why`
+```{r}
+dados %>%
+  filter(series_name == "13 Reasons Why") %>%
+    ggplot(aes(x = series_name, y = UserRating)) + 
+    geom_jitter(width = .1, color = "red") +
+  labs(title = "Distribuição de UserRating de 13 Reasons Why")
+```
+Podemos perceber que segundo a classificacao de usuarios IMDB 13 Reasons Why não possui valores estranhos. Existe pouca variação e dentre os valores frequentes temos as classificações de 8.5 como podemos ver no histograma abaixo.
+
+```{r}
+dados %>%
+  filter(series_name == "13 Reasons Why") %>%
+    ggplot(aes(x = UserRating)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+  labs(title = "Histograma de UserRating de 13 Reasons Why", y = "frequencia")
+```
+Como a frequência da classificação concentra-se em 8.5 então espera-se que a mediana esteja neste entorno. Neste caso, quase houve a coincidência da mediana(8.5) e da média(8.669231), o que faz com que essas métricas sejam representativas da distribuição de classificação de 13 Reasons Why.
+
+```{r}
+median((dados %>%  filter(series_name == "13 Reasons Why"))$UserRating)
+mean((dados %>%  filter(series_name == "13 Reasons Why"))$UserRating)
+```
+Podemos também observar a distribuição de classificação por temporada de 13 Reasons Why. A primeira temporada, única presente nos dados, tem classificação em termos de mediana de 8.5.
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")
+```
+Com o passar dos episódios de 13 Reasons Why da primeira temporada a classificação só subiu apesar de variar ao mesmo tempo.
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point()
+```
+Quanto a correlação entre o episódio da série e sua classificação e podemos perceber que a existência de uma correlação linear(~1).
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+    group_by(season) %>% 
+    summarise(correlacao_linear = cor(season_ep, UserRating, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(season_ep, UserRating, 
+                                       method = "kendall"))
+```
+
+# `Perguntas`
+**Qual das series que voce escolheu e mais bem avaliada no IMDB? A diferenca e grande? Pequena?**
+
+Aparentemente a serie mais bem avaliada e a Sense8 se observar-mos o grafico de dispersao e levarmos em consideração a classificação do usuário (UserRating) e a mediana como métrica de comparação.
 ```{r}
 dados %>% 
     ggplot(aes(x = series_name, y = UserRating)) + 
@@ -33,10 +186,9 @@ dados %>%
 
 ```
 
-Olhando para o grafico podemos usar como metrica de avaliacao a mediana das classificacoes dos usuarios, desta forma fica claro que Sense8 e a serie mais bem avaliada com relacao as demais. A mediana e uma boa metrica porque ajuda a perceber onde fica a maior concentracao de avaliacoes daquela serie diminuindo o vies de outliers. Ainda sobre a diferenca de cada uma das series vemos que a mediana de todas as series esta entre 8 e 9 sendo pequena a diferenca das avaliacoes entre 13 Reasons Why e Black Mirror e grande entre Sense8 e 13 Reasons Why e Sense8 e Black Mirror como vemos na imagem.
+Olhando para o grafico podemos usar como metrica de avaliacao a mediana das classificacoes dos usuarios, desta forma fica claro que Sense8 e a serie mais bem avaliada com relacao as demais. A mediana e uma boa metrica porque ajuda a perceber onde fica a maior concentracao de avaliacoes daquela serie diminuindo o vies de outliers. Ainda sobre a diferenca de cada uma das series vemos que a mediana de todas as series esta entre 8 e 9 sendo pequena a diferenca das avaliacoes entre 13 Reasons Why e Black Mirror e grande entre Sense8 e 13 Reasons Why e Sense8 e Black Mirror como vemos no gráfico.
 
-b. Qual das series que voce escolheu tem episodios de qualidade mais irregular segundo o IMDB? A diferenca e grande? Pequena?
-Repare que as perguntas deixam para voce a responsabilidade de decidir como analisar quem sao mais bem avaliada, o que e irregularidade entre episodios, etc.
+**Qual das series que voce escolheu tem episodios de qualidade mais irregular segundo o IMDB? A diferenca e grande? Pequena?**
 ```{r}
 dados %>% 
     ggplot(aes(x = series_name, y = UserRating)) + 
@@ -46,5 +198,4 @@ dados %>%
 
 ```
 
-Olhando para o grafico de violino podemos observar qual das series possui classificacao imdb mais irregular ou que mais varia. A serie Sense8 possui uma maior variacao de notas de classificacao como podemos ver a cima. A s�rie Black Mirror tamb�m possui uma maior varia��o. Dentre as 3 apenas 13 Reasons Why possui uma maior regularidade de qualidade. Quanto a diferen�a 13 Reasons Why possui uma grande diferen�a de regularidade se comparado a Black Mirror e a Sense8.  
-
+Olhando para o grafico de violino podemos observar qual das series possui classificacao imdb mais irregular ou que mais varia. A serie Sense8 possui uma maior variacao de notas de classificacao como podemos ver a cima. A serie Black Mirror tambem possui uma maior variacao. Dentre as 3 apenas 13 Reasons Why possui uma maior regularidade de qualidade. Quanto a diferenca 13 Reasons Why possui uma grande diferenca de regularidade se comparado a Black Mirror e a Sense8.
