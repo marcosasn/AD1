@@ -3,7 +3,6 @@ title: "Problema 1 - Checkpoint 1"
 author: Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)
 date: 19 de maio de 2017
 output: html_notebook
-encon: utf-8
 ---
 
 ```{r}
@@ -23,7 +22,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao da classificacao do usuario", x="Nome da serie", y="Classificacao do usuario")
 ```
-Podemos perceber que segundo a classificacao de usuarios IMDB Sense8 tem apenas um valor estranho. Existe pouca variacao e dentre os valores frequentes tem a classificacao 9 como podemos ver no histograma abaixo.
+Podemos perceber que segundo a classificacao de usuarios IMDB Sense8 tem apenas um valor estranho(~7.5). Existe variacao e dentre os valores frequentes tem a classificacao 9 como podemos ver no histograma abaixo.
 ```{r}
 dados %>%
   filter(series_name == "Sense8") %>%
@@ -76,7 +75,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao da classificacao do usuario", x="Nome da serie", y="Classificacao do usuario")
 ```
-Podemos perceber que segundo a classificacao de usuarios IMDB Black Mirror tem apenas um valor estranho. Existe pouca variacao e dentre os valores frequentes temos as classificacoes de 8.0 e 8.5 como podemos ver no histograma abaixo.
+Podemos perceber que segundo a classificacao de usuarios IMDB Black Mirror tem apenas um valor estranho(~7.0). Existe variacao e dentre os valores frequentes temos as classificacoes de 8.0 e 8.5 como podemos ver no histograma abaixo.
 
 ```{r}
 dados %>%
@@ -88,7 +87,7 @@ dados %>%
 ```
 
 
-Como a frequencia da classificacao concentra-se em 8.0 e 8.5 entao espera-se que a mediana esteja neste entorno. Neste caso, houve a coincidencia da mediana e da media, 8.3, que tambem e representativa da distribuicao de classificacao de Black Mirror.
+Como a frequencia da classificacao concentra-se em 8.0 e 8.5 entao espera-se que a mediana esteja neste entorno. Neste caso, houve a coincidencia da mediana e da media(8.3).
 ```{r}
 median((dados %>%  filter(series_name == "Black Mirror"))$UserRating)
 mean((dados %>%  filter(series_name == "Black Mirror"))$UserRating)
@@ -103,7 +102,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
 
-Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais variou a classificacao sendo a segunda temporada (clasificacoes de 7 ate ~9).
+Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o episódio 3 chegou a ter a classificação mais baixa da série) como podemos ver abaixo.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -113,7 +112,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
 labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
 ```
 
-Quanto a correlacao entre o episodio da temporada e sua classificacao podemos perceber que a existencia de uma correlacao linear, que tende a ser forte, entre essas duas variaveis apenas na primeira temporada.
+Quanto a correlacao entre o episodio da temporada e sua classificacao podemos perceber a existencia de uma correlacao linear, que tende a ser forte, entre essas duas variaveis apenas na primeira temporada.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
     group_by(season) %>% 
@@ -131,7 +130,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao da classificacao do usuario", x="Nome da serie", y="Classificacao do usuario")
 ```
-Podemos perceber que segundo a classificacao de usuarios IMDB 13 Reasons Why nao possui valores estranhos. Existe pouca variacao e dentre os valores frequentes temos as classificacoes de 8.5 como podemos ver no histograma abaixo.
+Podemos perceber que segundo a classificacao de usuarios IMDB 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as séries Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5 como podemos ver no histograma abaixo.
 
 ```{r}
 dados %>%
@@ -155,7 +154,7 @@ dados %>%  filter(series_name == "13 Reasons Why") %>%
     geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
-Com o passar dos episodios de 13 Reasons Why da primeira temporada a classificacao so subiu depois do episodio 5 ainda que tenha variado ao mesmo tempo.
+Com o passar dos episodios de 13 Reasons Why da primeira temporada a classificacao mais baixa foi registrada antes do episodio 5 como podemos ver no grafico abaixo.
 ```{r}
 dados %>%  filter(series_name == "13 Reasons Why") %>% 
   mutate(season = as.character(season)) %>% 
