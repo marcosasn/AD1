@@ -14,11 +14,6 @@ library("readr")
 dados = read_csv(file = "../dados/series_from_imdb.csv")
 dados = dados %>% filter(series_name %in% c("13 Reasons Why", "Sense8", "Black Mirror"))
 ```
-
-# `Perguntas`
-**Qual das series que voce escolheu no checkpoint 1 e mais votada pelos usuarios do IMDB? E a menos votada? A diferenca e grande? Pequena?**
-Acredito que a mais votada seja Sense8 e a menos votada seja Black Mirror com diferenca grande.
-
 # `Sense8`
 ```{r}
 dados %>%
@@ -56,6 +51,7 @@ dados %>%  filter(series_name == "Sense8") %>%
   ggplot(aes(x = season_ep, y = UserVotes, color = season)) + 
   geom_line() + 
   geom_point()+
+  scale_x_continuous(breaks=seq(1, 12, 1)) +
   labs(title = "Distribuicao de votos ao longo das temporadas", x="Episodio da temporada", y="Votos do usuario")
 ```
 
@@ -69,7 +65,161 @@ dados %>%  filter(series_name == "Sense8") %>%
                                        method = "kendall"))
 ```
 
+# `Black Mirror`
+```{r}
+dados %>%
+  filter(series_name == "Black Mirror") %>%
+    ggplot(aes(x = series_name, y = UserVotes)) + 
+    geom_jitter(width = .1, color = "red") +
+  labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
+```
+Podemos perceber que segundo a classificacao de usuarios IMDB acima, Black Mirror tem apenas um valor estranho(~7.0). Existe variacao e dentre os valores frequentes temos as classificacoes de 8.0 e 8.5. Isto fica claro se observar-mos o histograma abaixo.
 
+```{r}
+dados %>%
+  filter(series_name == "Black Mirror") %>%
+    ggplot(aes(x = UserVotes)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+  labs(title = "Histograma de votos do usuario", x="Votos do usuario", y = "Frequencia")
+```
+Como a frequencia da classificacao concentra-se em 8.0 e 8.5 entao espera-se que a mediana esteja neste entorno. Neste caso, houve a coincidencia da mediana e da media(8.3).
+```{r}
+median((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
+mean((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
+```
+Podemos tambem observar a distribuicao de classificacao por temporada de Black Mirror. A terceira temporada e melhor classificada se comparada a primeira e a segunda temporada, em termos de mediana, e a variacao da classificacao da segunda temporada foi maior do que na primeira e terceira. Pode-se observar tambem que a temporada com menor classificacao dentre as tres foi a segunda temporada como podemos ver abaixo.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+    ggplot(aes(x = as.character(season), y = UserVotes)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+  labs(title = "Box-plot de votos do usuario por temporada da serie", x="Temporada", y="Votos do usuario")
+```
+Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o epis?dio 3 chegou a ter a classifica??o mais baixa da s?rie) como podemos ver abaixo.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserVotes, color = season)) + 
+  geom_line() + 
+  geom_point() +
+  labs(title = "Distribuicao de votos ao longo das temporadas", x="Episodio da temporada", y="Votos do usuario")
+```
+Quanto a correlacao entre o episodio da temporada e sua classificacao podemos perceber a existencia de uma correlacao linear, aparentemente forte, entre essas duas variaveis apenas na primeira temporada.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+    group_by(season) %>% 
+    summarise(correlacao_linear = cor(season_ep, UserVotes, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(season_ep, UserVotes, 
+                                       method = "kendall"))
+```
 
-** **
+# `13 Reasons Why`
+```{r}
+dados %>%
+  filter(series_name == "13 Reasons Why") %>%
+    ggplot(aes(x = series_name, y = UserVotes)) + 
+    geom_jitter(width = .1, color = "red") +
+labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
+```
+Podemos perceber que segundo a classificacao de usuarios IMDB acima, 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as s?ries Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5. Isto fica ainda mais claro no histograma abaixo.
+
+```{r}
+dados %>%
+  filter(series_name == "13 Reasons Why") %>%
+    ggplot(aes(x = UserVotes)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+    labs(title = "Histograma de votos do usuario", x="Votos do usuario", y = "Frequencia")
+```
+Como a frequencia da classificacao concentra-se em 8.5 entao espera-se que a mediana esteja neste entorno. Neste caso, quase houve a coincidencia da mediana(8.5) e da media(8.669231).
+```{r}
+median((dados %>%  filter(series_name == "13 Reasons Why"))$UserVotes)
+mean((dados %>%  filter(series_name == "13 Reasons Why"))$UserVotes)
+```
+Podemos tambem observar a distribuicao de classificacao por temporada de 13 Reasons Why. A primeira temporada, unica presente nos dados, tem classificacao em termos de mediana de 8.5 como vemos no grafico abaixo.
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+    ggplot(aes(x = as.character(season), y = UserVotes)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+  labs(title = "Box-plot de votos do usuario por temporada da serie", x="Temporada", y="Votos do usuario")
+```
+Com o passar dos episodios de 13 Reasons Why da primeira temporada a classificacao mais baixa foi registrada antes do episodio 5 como podemos ver no grafico abaixo.
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserVotes, color = season)) + 
+  geom_line() + 
+  geom_point() +
+  labs(title = "Distribuicao de votos ao longo das temporadas", x="Episodio da temporada", y="Votos do usuario")
+```
+Quanto a correlacao entre o episodio da temporada e sua classificacao podemos perceber a existencia de uma correlacao linear aparentemente forte(~1).
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+    group_by(season) %>% 
+    summarise(correlacao_linear = cor(season_ep, UserVotes, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(season_ep, UserVotes, 
+                                       method = "kendall"))
+```
+
+# `Perguntas`
+**Qual das series que voce escolheu no checkpoint 1 e mais votada pelos usuarios do IMDB? E a menos votada? A diferenca e grande? Pequena?**
+Acredito que a mais votada seja Sense8 e a menos votada seja Black Mirror com diferenca grande.
+
+**Resposta**
+Aparentemente a serie mais bem avaliada e a Sense8 se observar-mos o grafico de dispersao abaixo e levarmos em consideracao a classificacao do usuario (UserRating) e a mediana como metrica de comparacao.
+```{r}
+dados %>% 
+    ggplot(aes(x = series_name, y = UserVotes)) + 
+    geom_jitter(width = .1, color = "red")  +
+  labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
+```
+
+Para observar melhor qual delas e mais bem avaliada segundo a classificacao do usuario vamos olhar para o grafico de box plot de cada uma das series.
+```{r}
+dados %>% 
+    ggplot(aes(x = series_name, y = UserVotes)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+  labs(title = "Box-plot de votos do usuario por serie", x="Nome da serie", y="Votos do usuario")
+```
+Olhando para o grafico e utilizando a mediana como metrica de comparacao entre as series fica claro que Sense8 e a serie mais bem avaliada com relacao as demais. A mediana e uma boa metrica porque ajuda a perceber onde fica a maior concentracao de avaliacoes daquela serie diminuindo o vies de outliers. 
+
+Ainda sobre a diferenca de cada uma das series vemos que a mediana de todas as series esta entre 8 e 9 sendo pequena a diferenca das avaliacoes entre 13 Reasons Why e Black Mirror e grande entre Sense8 e 13 Reasons Why e Sense8 e Black Mirror como vemos no grafico acima.
+
+**Quais os episódios, da série que você escolheu no checkpoint 1, que são mais bem avaliados segundo o IMDB? E os que são menos avaliados? A diferença é grande? Pequena?**
+Acredito que os mais bem avaliado seja o primeiro episódio em cada uma das série e que o menos avaliado seja os episódios do meio ou decorrer.
+
+**Resposta**
+```{r}
+dados %>%  filter(series_name == "Sense8") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point()+
+  scale_x_continuous(breaks=seq(1, 11, 1)) +
+  labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
+```
+
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point() +
+labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
+```
+
+```{r}
+dados %>%  filter(series_name == "13 Reasons Why") %>% 
+  mutate(season = as.character(season)) %>% 
+  ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
+  geom_line() + 
+  geom_point() +
+  labs(title = "Distribuicao da classificacao ao longo da temporada", x="Episodio da temporada", y="Classificacao do usuario")
+```
+
 

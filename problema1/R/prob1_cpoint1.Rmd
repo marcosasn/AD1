@@ -51,6 +51,7 @@ dados %>%  filter(series_name == "Sense8") %>%
   ggplot(aes(x = season_ep, y = UserRating, color = season)) + 
   geom_line() + 
   geom_point()+
+  scale_x_continuous(breaks=seq(1, 12, 1)) +
   labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
 ```
 
@@ -95,7 +96,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
     geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
-Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o episódio 3 chegou a ter a classificação mais baixa da série) como podemos ver abaixo.
+Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o epis?dio 3 chegou a ter a classifica??o mais baixa da s?rie) como podemos ver abaixo.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -122,7 +123,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao da classificacao do usuario", x="Nome da serie", y="Classificacao do usuario")
 ```
-Podemos perceber que segundo a classificacao de usuarios IMDB acima, 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as séries Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5. Isto fica ainda mais claro no histograma abaixo.
+Podemos perceber que segundo a classificacao de usuarios IMDB acima, 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as s?ries Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5. Isto fica ainda mais claro no histograma abaixo.
 
 ```{r}
 dados %>%
@@ -200,4 +201,4 @@ Olhando para o grafico de violino acima podemos observar qual das series possui 
 
 Quanto a diferenca, 13 Reasons Why possui uma grande diferenca de regularidade se comparado a Black Mirror e a Sense8.
 
-Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
+Copyright ? 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
