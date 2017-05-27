@@ -22,14 +22,12 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
 ```
-Podemos perceber que segundo a distribuicao de votos do usuarios no grafico acima, Sense8 tem dois grupos de valores dispersos(votos < 1000 e votos >= 2000).
-
-Quanto a mediana temos 2047 e a media 1562.0. O valor indicado para media e pouco represetativo da distribuicao de votos por causa dos grupos de valores dispersos.
+Podemos perceber que segundo a distribuicao de votos dos usuarios para cada episodio da serie no grafico acima, Sense8 tem dois grupos de valores distintos(votos < 1000 e votos >= 2000). Quanto a mediana temos 2047 e a media 1562.043. O valor indicado para media e pouco represetativo da distribuicao de votos por causa dos grupos de valores dispersos.
 ```{r}
 median((dados %>%  filter(series_name == "Sense8"))$UserVotes)
 mean((dados %>%  filter(series_name == "Sense8"))$UserVotes)
 ```
-Podemos tambem observar, no grafico abaixo, a distribuicao de votos por temporada. A primeira temporada e melhor votada se comparada a segunda temporada, em termos de mediana, e a variacao de votos da primeira foi maior do que na segunda.
+Podemos tambem observar no grafico abaixo, a distribuicao de votos por temporada. A primeira temporada e melhor votada se comparada a segunda temporada, em termos de mediana, e a variacao de votos da primeira foi maior do que na segunda.
 ```{r}
 dados %>%  filter(series_name == "Sense8") %>% 
     ggplot(aes(x = as.character(season), y = UserVotes)) + 
@@ -47,7 +45,6 @@ dados %>%  filter(series_name == "Sense8") %>%
   scale_x_continuous(breaks=seq(1, 12, 1)) +
   labs(title = "Distribuicao de votos ao longo das temporadas", x="Episodio da temporada", y="Votos do usuario")
 ```
-
 Podemos ainda verificar a existencia de uma fraca correlacao negativa entre o episodio da temporada e seu numero de votos.
 ```{r}
 dados %>%  filter(series_name == "Sense8") %>% 
@@ -66,14 +63,12 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
 ```
-Podemos perceber que segundo a distribuicao de votos do usuarios do IMDB acima, Black Mirror tem votos dispersos.
-
-Em termos de media temos 12336.62 e de mediana 11844.
+Podemos perceber que segundo a distribuicao de votos do usuarios do IMDB acima, Black Mirror tem votos dispersos. Em termos de media temos 12336.62 e de mediana 11844.
 ```{r}
 median((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
 mean((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
 ```
-Podemos tambem observar a distribuicao de votos por temporada de Black Mirror. A primeira temporada e melhor votada se comparada a segunda e a terceira temporada, em termos de mediana, e a variacao da votos da terceira temporada foi maior do que na primeira e segunda. Pode-se observar tambem que ocorre um empate dentre a segunda e a terceira temporada como podemos ver abaixo.
+Podemos tambem observar a distribuicao de votos por temporada de Black Mirror. A primeira temporada e melhor votada se comparada a segunda e a terceira temporada, em termos de mediana, e a variacao da votos da terceira temporada foi maior do que na primeira e segunda. Pode-se observar tambem que ocorre um empate entre a mediana de votos da segunda e da terceira temporada como podemos ver abaixo.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
     ggplot(aes(x = as.character(season), y = UserVotes)) + 
@@ -241,3 +236,5 @@ Olhando para o grafico acima fica facil observar se a avaliacao dos episodios da
 Sense8 possui apenas duas temporadas, a primeira contendo 12 episodios. Observando a transicao episodios 12-13 podemos observar, igualmente em Black Mirro, uma queda da avaliacao. Assim como as quedas de avalicao de Black Mirro, a queda em Sense8 e em razao de decimos(em torno de 9).
 
 Respondendo a pergunta: a avaliacao dos episodios das novas temporadas nao e uma continuidade da avaliacao dos episodios da temporada anterior. Pode-se observar uma queda na avalicao em razao de decimos.
+
+Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)

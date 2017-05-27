@@ -201,4 +201,4 @@ Olhando para o grafico de violino acima podemos observar qual das series possui 
 
 Quanto a diferenca, 13 Reasons Why possui uma grande diferenca de regularidade se comparado a Black Mirror e a Sense8.
 
-Copyright ? 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
+Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
