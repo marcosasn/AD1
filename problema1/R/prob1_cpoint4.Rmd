@@ -168,12 +168,27 @@ Ainda sobre a diferenca de cada uma das series vemos que a mediana de votos das 
 Conclusao: Eu tinha imaginado que pelo fato de Sense8 ser a serie mais bem classificada segundo o IMDB (Checkpoint 1) entao, certamente, ela seria a serie mais votada. Isto significa que a a classificacao de um episodio pelo usuario do IMDB leva em consideracao algo alem do numero de votos do episodio.
 
 Nova pergunta: Com o intuito de certificar-se se existe ou não uma relação forte entre a classificacao do usuario do IMDB (UserRating) e o numero de votos (UserVotes), qual o coeficiente de corelacao linear entre essas duas variaveis?
+```{r}
+dados %>% group_by(series_name) %>% 
+    summarise(correlacao_linear = cor(UserRating, UserVotes, 
+                                      method = "pearson"), 
+              correlacao_kendall = cor(UserRating, UserVotes, 
+                                       method = "kendall"))
+```
+Como podemos visualiar na tabela acima o coeficiente em cada uma das series esta distante de 1 e de -1. Logo, pode-se dizer que existe uma correlacao linear fraca entre a classificacao do usuario e os votos do usuario para um dado episodio. Isso pode ser ainda mais facil vizualizado no grafico abaixo de distribuicao de classificao e votos do usuario.
+```{r}
+dados %>% 
+    ggplot(aes(x = UserRating, y = UserVotes)) + 
+    geom_jitter(width = .1, color = "red")  +
+    geom_smooth(method=lm , color="red", se=TRUE) +
+    labs(title = "Distribuicao de classificacao e votos do usuario", x="Classificacao do usuario", y="Votos do usuario")
+```
 
 # `Pergunta 2`
 **Quais os episodios, da serie que voce escolheu no checkpoint 1, que sao mais bem avaliados segundo o IMDB? E os que sao menos avaliados? A diferenca e grande? Pequena?**
 Possivel resposta: Acredito que os mais bem avaliado seja o primeiro episodio em cada uma das series e que o menos avaliado seja os episodios do meio ou decorrer.
 
-O episodio de Sense8 mais bem avaliados foi o episodios 11 da segunda temporada e o menos avaliado foi o episodio 1 da primeira temporada como podemos ver no grafico abaixo. 
+O episodio de Sense8 mais bem avaliados foi o episodios 11 da segunda temporada e o menos avaliado foi o episodio 1 da primeira temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que a diferenca e grande, o episodio 11 teve avaliacao superior a 9.5 enquanto o episodio 1 teve 7.5(diferenca de pelo menos 2 pontos). 
 ```{r}
 dados %>%  filter(series_name == "Sense8") %>% 
   mutate(season = as.character(season)) %>% 
@@ -183,7 +198,7 @@ dados %>%  filter(series_name == "Sense8") %>%
   scale_x_continuous(breaks=seq(1, 12, 1)) +
   labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
 ```
-O episodio de Black Mirror mais bem avaliado foi o episodios 4 da segunda temporada e o menos avaliado foi o episodio 1 da primeira temporada como podemos ver no grafico abaixo. 
+O episodio de Black Mirror mais bem avaliado foi o episodios 4 da segunda temporada e o menos avaliado foi o episodio 1 da primeira temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que a diferenca e razoavel, o episodio 4 teve avaliacao superior a 9.0 enquanto o episodio 1 teve quase 8.2(diferenca inferior a 1 ponto). 
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -192,7 +207,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
   geom_point() +
 labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
 ```
-O episodio de 13 Reasons Why mais bem avaliados foi o episodios 13 da primeira temporada e o menos avaliado foi o episodio 3 da mesma temporada como podemos ver no grafico abaixo. 
+O episodio de 13 Reasons Why mais bem avaliados foi o episodios 13 da primeira temporada e o menos avaliado foi o episodio 3 da mesma temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que a diferenca e razoavel, o episodio 13 teve avaliacao proxima a 10 enquanto o episodio 3 teve avaliacao proxima de 8.2(diferenca de pelo menos 1 ponto). 
 ```{r}
 dados %>%  filter(series_name == "13 Reasons Why") %>% 
   mutate(season = as.character(season)) %>% 
@@ -201,3 +216,28 @@ dados %>%  filter(series_name == "13 Reasons Why") %>%
   geom_point() +
   labs(title = "Distribuicao da classificacao ao longo da temporada", x="Episodio da temporada", y="Classificacao do usuario")
 ```
+Conclusao: Como podemos ver os primeiros episodios de todas as series nao sao bem avaliados e apenas as series 13 Reasons Why e Black Mirror tiveram os episodios menos avaliados no decorrer da temporada.
+
+Nova pergunta: Para as series que possuem mais de uma temporada, a avaliacao dos primeiros episodio de uma nova temporada mantem ou faz jus a avaliacao dos episodios da temporada anterior? O que quero saber e: a avaliacao dos episodios da nova temporada e uma continuidade da avaliacao dos episodios da temporada anterior?
+
+As unicas series detre as 3 que possuem mais de uma temporada sao Sense8 e Black Mirror.  
+```{r}
+dados %>%
+  filter(series_name != "13 Reasons Why") %>%
+  ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous() +
+  scale_x_continuous(breaks=seq(1,23,1)) +
+  facet_grid(series_name ~ .) +
+
+  xlab("Episodio da serie") + 
+  ylab("Classificacao do usuario") +
+  ggtitle("Distribuicao da classificacao do episodio ao longo das temporadas") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+Olhando para o grafico acima fica facil observar se a avaliacao dos episodios da nova temporada e uma continuidade da avaliacao dos episodios da temporada anterior. Vamos comecar por Black Mirror, a primeira temporada tem apenas 3 episodios, desta forma, o episodio 4 marca o inicio da segunda temporada(episodios 3-4). O grafico revela uma queda da avaliacao da serie em razao de decimos. A transicao da segunda temporada para a terceira(episodios 7-8) podemos observar novamente uma queda da avaliacao. Quais as conclusoes, como as quedas registradas estao na razao de decimos entao isso nao deve ser algo preocupante mas deve ser algo motivador para que os produtores e diretores procurem aumentar/manter a avaliacao da serie.
+
+Sense8 possui apenas duas temporadas, a primeira contendo 12 episodios. Observando a transicao episodios 12-13 podemos observar, igualmente em Black Mirro, uma queda da avaliacao. Assim como as quedas de avalicao de Black Mirro, a queda em Sense8 e em razao de decimos(em torno de 9).
+
+Respondendo a pergunta: a avaliacao dos episodios das novas temporadas nao e uma continuidade da avaliacao dos episodios da temporada anterior. Pode-se observar uma queda na avalicao em razao de decimos.
