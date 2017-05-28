@@ -96,7 +96,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
     geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
-Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o epis?dio 3 chegou a ter a classifica??o mais baixa da s?rie) como podemos ver abaixo.
+Com o passar dos episodios de Black Mirror a unica temporada que a classificacao so subiu foi a primeira, enquanto que na segunda e terceira temporada vemos uma variacao da classificacao. Dentre as variacoes a temporada que mais teve queda na classificacao sendo a segunda temporada (o episodio 3 chegou a ter a classificacao mais baixa da serie) como podemos ver abaixo.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -123,8 +123,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao da classificacao do usuario", x="Nome da serie", y="Classificacao do usuario")
 ```
-Podemos perceber que segundo a classificacao de usuarios IMDB acima, 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as s?ries Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5. Isto fica ainda mais claro no histograma abaixo.
-
+Podemos perceber que segundo a classificacao de usuarios IMDB acima, 13 Reasons Why nao possui valores estranhos. Existe pouca variacao se comparado as series Sense8 e Black Mirror e dentre os valores frequentes temos as classificacoes de 8.5. Isto fica ainda mais claro no histograma abaixo.
 ```{r}
 dados %>%
   filter(series_name == "13 Reasons Why") %>%
