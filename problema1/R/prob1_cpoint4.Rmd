@@ -162,7 +162,7 @@ dados %>%
     geom_jitter(width = .1, color = "red") +
   labs(title = "Distribuicao de votos do usuario", x="Nome da serie", y="Votos do usuario")
 ```
-Podemos perceber que segundo a distribuicao de votos do usuarios do IMDB acima, Black Mirror tem votos dispersos. Em termos de media temos 12336.62 e de mediana 11844.
+Podemos perceber que segundo a distribuicao de votos dos usuarios do IMDB acima, Black Mirror tem votos dispersos. Em termos de media temos 12336.62 e de mediana 11844.
 ```{r}
 median((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
 mean((dados %>%  filter(series_name == "Black Mirror"))$UserVotes)
@@ -175,7 +175,7 @@ dados %>%  filter(series_name == "Black Mirror") %>%
     geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
   labs(title = "Box-plot de votos do usuario por temporada da serie", x="Temporada", y="Votos do usuario")
 ```
-Com o passar dos episodios de Black Mirror a unica temporada que manteve o numero de votos foi a primeira(episodios 1 a 2), enquanto que na segunda e terceira temporada vemos uma variacao do numero de votos. Dentre as variacoes a temporada que mais teve queda no numero de votos sendo a terceira temporada (o episodio 5 chegou a ter o pior numero de votos da serie) como podemos ver abaixo.
+Com o passar dos episodios de Black Mirror a unica temporada que manteve o numero de votos foi a primeira(episodios 1 a 2), enquanto que na segunda e terceira temporada vemos uma variacao do numero de votos. Dentre as variacoes a temporada que mais teve queda no numero de votos sendo a terceira temporada (o episodio 5 chegou a ter o menor numero de votos da serie) como podemos ver abaixo.
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -284,7 +284,7 @@ dados %>%  filter(series_name == "13 Reasons Why") %>%
 
 # `Pergunta 1`
 **Qual das series que voce escolheu no checkpoint 1 e mais votada pelos usuarios do IMDB? E a menos votada? A diferenca e grande? Pequena?**
-Possível resposta: Acredito que a mais votada seja Sense8 e a menos votada seja Black Mirror com diferenca grande.
+*Possível resposta: Acredito que a mais votada seja Sense8 e a menos votada seja Black Mirror com diferenca grande.*
 
 Aparentemente a serie mais bem votada e a serie Black Mirror se observar-mos o grafico de dispersao abaixo e levarmos em consideracao os votos do usuario (UserVotes) e a mediana como metrica de comparacao.
 ```{r}
@@ -305,9 +305,9 @@ Olhando para o grafico acima e utilizando a mediana como metrica de comparacao e
 
 Ainda sobre a diferenca de cada uma das series vemos que a mediana de votos das series 13 Reasons Why e Sense8 esta entre 0 e 2500, podendo se considerar que, e pequena a diferenca de votos entre elas e grande entre Black Mirror e 13 Reasons Why e Black Mirror e Sense8 como vemos no grafico acima.
 
-Conclusao: O senso comum leva a crer que pelo fato de Sense8 ser a serie mais bem classificada segundo o IMDB (Checkpoint 1) entao, certamente, ela seria a serie mais votada(altos votos levam a boa classificacao). Isto significa que a a classificacao de um episodio segundo o IMDB leva em consideracao algo alem do numero de votos do episodio ja que a serie mais bem votada foi Black Mirror e nao Sense8.
+Conclusao: O senso comum leva a crer que pelo fato de Sense8 ser a serie mais bem classificada pelos usuarios segundo o IMDB (Checkpoint 1) entao, certamente, ela seria a serie mais votada pelos usuarios(altos votos levam a alta classificacao). Isto significa que a a classificacao dos usuarios segundo o IMDB leva em consideracao algo alem do numero de votos que os usuarios dao a um episodio ja que a serie mais bem votada foi Black Mirror e nao Sense8.
 
-Nova pergunta: Com o intuito de certificar-se se existe ou não uma relação entre a classificacao do episodio segundo o IMDB (UserRating) e o numero de votos (UserVotes), qual o coeficiente de corelacao linear entre essas duas variaveis?
+Nova pergunta: Com o intuito de certificar se existe ou não uma relação entre a classificacao dos usuarios segundo o IMDB (UserRating) e o numero de votos dos usuarios (UserVotes), qual o coeficiente de corelacao linear entre essas duas variaveis?
 ```{r}
 dados %>% group_by(series_name) %>% 
     summarise(correlacao_linear = cor(UserVotes, UserRating, 
@@ -315,11 +315,11 @@ dados %>% group_by(series_name) %>%
               correlacao_kendall = cor(UserVotes, UserRating, 
                                        method = "kendall"))
 ```
-Como podemos visualiar na tabela acima o coeficiente de correlacao linear entre as variaveis, em cada uma das series, esta distante tanto de 1, quanto de -1. Logo, pode-se dizer que existe uma correlacao linear fraca entre a classificacao do episodio e os votos dos usuarios para um dado episodio, em outras palavras: o numero de votos de um episodio nao ira significar que o episodio sera bem classificado ou mal classificado segundo o IMDB necessariamente.
+Como podemos visualiar na tabela acima o coeficiente de correlacao linear entre as variaveis, em cada uma das series, esta distante tanto de 1, quanto de -1. Logo, pode-se dizer que existe uma correlacao linear fraca entre a classificacao dos usuarios e os votos dos usuarios para um dado episodio, em outras palavras: o numero de votos de um episodio nao ira significar que o episodio sera bem classificado ou mal classificado segundo o IMDB necessariamente.
 
 # `Pergunta 2`
-**Qual o episodio, das series que voce escolheu no checkpoint 1, que foi mais bem avaliado segundo o IMDB? E o que foi menos avaliados? A diferenca e grande? Pequena?**
-Possivel resposta: Acredito que os mais bem avaliado seja o primeiro episodio em cada uma das series e que o menos avaliado seja os episodios do meio ou decorrer.
+**Qual o episodio, das series que voce escolheu no checkpoint 1, que foi mais bem avaliado segundo o IMDB? E o que foi menos avaliado? A diferenca e grande? Pequena?**
+*Possivel resposta: Acredito que os mais bem avaliado seja o primeiro episodio em cada uma das series e que o menos avaliado seja os episodios do meio ou decorrer.*
 
 O episodio de Sense8 mais bem avaliados foi o episodios 11 da segunda temporada e o menos avaliado foi o episodio 1 da primeira temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que e grande, o episodio 11 teve avaliacao superior a 9.5 enquanto o episodio 1 teve 7.5(diferenca de pelo menos 2 pontos). 
 ```{r}
@@ -331,7 +331,7 @@ dados %>%  filter(series_name == "Sense8") %>%
   scale_x_continuous(breaks=seq(1, 12, 1)) +
   labs(title = "Distribuicao da classificacao ao longo das temporadas", x="Episodio da temporada", y="Classificacao do usuario")
 ```
-O episodio de Black Mirror mais bem avaliado foi o episodios 4 da segunda temporada e o menos avaliado foi o episodio 5 da terceira temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que e razoavel, o episodio 4 teve avaliacao superior a 9.0 enquanto o episodio 5 teve quase 8.0(diferenca de pelo menos 1 ponto). 
+O episodio de Black Mirror mais bem avaliado foi o episodios 4 da segunda temporada e o menos avaliado foi o episodio 3 da mesma temporada como podemos ver no grafico abaixo. Quanto a diferenca pode-se dizer que e grande, o episodio 4 teve avaliacao superior a 9.0 enquanto o episodio 3 teve avaliacao 7.0(diferenca de pelo menos 2 pontos). 
 ```{r}
 dados %>%  filter(series_name == "Black Mirror") %>% 
   mutate(season = as.character(season)) %>% 
@@ -389,6 +389,6 @@ dados %>%  filter(series_name == "Sense8") %>%
 ```
 Observando o grafico acima fica facil perceber como se comporta a avaliacao dos episodios com o passar das temporadas de Sense8. Percebe-se claramente o crescimento da avaliacao dos episodios se utilizamos a mediana para comparar cada temporada. Ou seja, houve um crescimento da avaliacao dos episodios.
 
-Respondendo a pergunta: a avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razao de decimos, ja a avaliacao dos episodios da nova temporada de Sense8 houve um crescimento quando comparados aa avaliacao dos episodios da temporada anterior.
+Respondendo a pergunta: a avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razao de decimos, ja a avaliacao dos episodios da nova temporada de Sense8 houve um crescimento quando comparados a avaliacao dos episodios da temporada anterior.
 
 Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
