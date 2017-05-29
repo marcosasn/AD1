@@ -351,7 +351,7 @@ dados %>%  filter(series_name == "13 Reasons Why") %>%
 ```
 Conclusao: Como podemos ver o primeiro episodio de cada uma das series nao e o mais bem avaliado e apenas as series 13 Reasons Why e Black Mirror tiveram o episodio menos bem avaliado no decorrer da temporada.
 
-Nova pergunta: Para as series que possuem mais de uma temporada, a avaliacao do primeiro episodio de uma nova temporada mantem ou faz jus a avaliacao do ultimo episodio da temporada anterior? O que quero saber e: a avaliacao do episodios da nova temporada e uma continuidade da avaliacao do ultimo episodio da temporada anterior?
+Nova pergunta: Para as series que possuem mais de uma temporada, a avaliacao dos episodios de uma nova temporada cresceu ou decresceu quando comparados a avaliacao dos episodios da temporada anterior?
 
 As unicas series dentre as 3 escolhidas possuidoras de mais de uma temporada sao Sense8 e Black Mirror.
 ```{r}
@@ -369,10 +369,26 @@ dados %>%
   ggtitle("Distribuicao da classificacao do episodio ao longo das temporadas") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-Olhando para o grafico acima fica facil observar se a avaliacao dos episodios da nova temporada e uma continuidade da avaliacao dos episodios da temporada anterior. Vamos comecar por Black Mirror: a primeira temporada tem apenas 3 episodios, desta forma, o episodio 4 marca o inicio da segunda temporada com queda da avaliacao do episodio em razao de decimos. A transicao da segunda temporada para a terceira(episodios 7-8) podemos observar novamente uma queda da avaliacao do episodio. Em virtude das quedas registradas estarem em razao de decimos entao isso nao deve ser algo preocupante, porém, deve ser algo motivador para que os produtores e diretores procurem aumentar/manter a avaliacao dos episodios da serie.
+Olhando para o grafico acima fica facil observar se a avaliacao dos episodios da nova temporada cresce ou decresce quando comparados a temporada anterior. Black Mirror apresenta uma variacao da avaliacao dos episodios com o passar das temporadas mas fica dificil afirmar com precisao se a avaliacao dos episodios cresceu ou decresceu.
 
-Sense8 possui apenas duas temporadas: a primeira contendo 12 episodios e a segunda contendo 11 episodios. Observando a transicao dos episodios 12-13 podemos observar, igualmente em Black Mirror, uma queda da avaliacao. Assim como as quedas de avalicao de Black Mirror, a queda em Sense8 e em razao de decimos.
+Observando Sense8 podemos observar um crescimento da avaliacao dos episodios.
+```{r}
+dados %>%  filter(series_name == "Black Mirror") %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+  labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
+```
+Observando o grafico acima fica facil perceber como se comporta a avaliacao dos episodios com o passar das temporadas de Black Mirror. Percebe-se claramente que a serie mantem a avaliacao dos episodios se utilizamos a mediana para comparar cada temporada. Ou seja, a serie manteve a avaliacao dos episodios.
+```{r}
+dados %>%  filter(series_name == "Sense8") %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+  labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
+```
+Observando o grafico acima fica facil perceber como se comporta a avaliacao dos episodios com o passar das temporadas de Sense8. Percebe-se claramente o crescimento da avaliacao dos episodios se utilizamos a mediana para comparar cada temporada. Ou seja, houve um crescimento da avaliacao dos episodios.
 
-Respondendo a pergunta: a avaliacao dos episodios das novas temporadas pode ser considerado uma continuidade da avaliacao dos episodios da temporada anterior.
+Respondendo a pergunta: a avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razao de decimos, ja a avaliacao dos episodios da nova temporada de Sense8 houve um crescimento quando comparados aa avaliacao dos episodios da temporada anterior.
 
 Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
