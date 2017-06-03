@@ -11,8 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Revisitando uma visualização sua
 ## Black Mirror x Sense8 x 13 Reasons Why
-Estivemos interessados em investigar como se comportou a avaliação de uma nova temporada de cada uma das séries mencionadas acima após o término de uma temporada. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
-
 ```{r, echo=FALSE}
 library("dplyr")
 library("tidyr")
@@ -21,6 +19,9 @@ library("readr")
 dados = read_csv(file = "../dados/series_from_imdb.csv")
 dados = dados %>% filter(series_name %in% c("13 Reasons Why","Sense8", "Black Mirror"))
 ```
+Estamos interessados em investigar como se comportou a avaliação de uma nova temporada de cada uma das séries mencionadas acima após o término de uma temporada anterior. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
+
+Olhando para o grafico abaixo fica facil observar se a avaliacao dos episodios da nova temporada cresce ou decresce quando comparados a temporada anterior.
 ```{r, echo=FALSE}
 dados %>%
   ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
@@ -34,8 +35,10 @@ dados %>%
   ggtitle("Distribuicao da classificacao do episodio ao longo das temporadas") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+Black Mirror apresenta uma variacao da avaliacao dos episodios com o passar das temporadas mas fica dificil afirmar algo. Já Sense8 podemos observar um crescimento da avaliação dos episódios.
 
-```{r}
+Precisamente a avaliação dos episodios cresceu ou decresceu? Observando o grafico abaixo fica facil perceber como se comporta a avaliacao dos episodios com o passar das temporadas.
+```{r, echo=FALSE}
 dados %>% 
     ggplot(aes(x = as.character(season), y = UserRating)) + 
     geom_boxplot(outlier.color = NA) +   
@@ -43,5 +46,10 @@ dados %>%
     facet_grid(series_name ~ .) +
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
+Percebe-se claramente que Black Mirror mantém a avaliação dos episódios se utilizamos a mediana para comparar cada temporada. Ou seja, a serie manteve a avaliacao dos episodios.
 
-##...
+Percebe-se claramente também o crescimento da avaliacao dos episodios de Sense8 se utilizamos a mediana para comparar cada temporada. Ou seja, houve um crescimento da avaliação dos episódios.
+
+A avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razão de décimos, já a avaliação dos episódios da nova temporada de Sense8 houve um crescimento quando comparados a avaliação dos episódios da temporada anterior. Quanto a série 13 Reasons Why nada se pode afirmar porque a mesma só teve uma temporada.
+
+Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
