@@ -1,0 +1,47 @@
+---
+title: "Problema 2 - Checkpoint 1"
+author: Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)
+date: "June 3, 2017"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Revisitando uma visualização sua
+## Black Mirror x Sense8 x 13 Reasons Why
+Estivemos interessados em investigar como se comportou a avaliação de uma nova temporada de cada uma das séries mencionadas acima após o término de uma temporada. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
+
+```{r, echo=FALSE}
+library("dplyr")
+library("tidyr")
+library("ggplot2")
+library("readr")
+dados = read_csv(file = "../dados/series_from_imdb.csv")
+dados = dados %>% filter(series_name %in% c("13 Reasons Why","Sense8", "Black Mirror"))
+```
+```{r, echo=FALSE}
+dados %>%
+  ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous() +
+  scale_x_continuous(breaks=seq(1,23,1)) +
+  facet_grid(series_name ~ .) +
+  xlab("Episodio da serie") + 
+  ylab("Classificacao do usuario") +
+  ggtitle("Distribuicao da classificacao do episodio ao longo das temporadas") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+dados %>% 
+    ggplot(aes(x = as.character(season), y = UserRating)) + 
+    geom_boxplot(outlier.color = NA) +   
+    geom_jitter(width = .1, size = .5, alpha = .5, color = "red")+
+    facet_grid(series_name ~ .) +
+  labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
+```
+
+##...
