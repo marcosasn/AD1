@@ -19,9 +19,9 @@ library("readr")
 dados = read_csv(file = "../dados/series_from_imdb.csv")
 dados = dados %>% filter(series_name %in% c("13 Reasons Why","Sense8", "Black Mirror"))
 ```
-Estamos interessados em investigar como se comportou a avaliação de uma nova temporada de cada uma das séries mencionadas acima após o término de uma temporada anterior. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
+Estamos interessados em investigar como se comportou a avaliação de uma nova temporada, de cada uma das séries mencionadas acima, após o término de uma temporada anterior. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
 
-Olhando para o grafico abaixo fica facil observar se a avaliacao dos episodios da nova temporada cresce ou decresce quando comparados a temporada anterior.
+Olhando para o gráfico abaixo fica fácil estudar o crescimento ou decrescimento da curva de avaliação de todos os episódios da série.
 ```{r, echo=FALSE}
 dados %>%
   ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
@@ -35,9 +35,9 @@ dados %>%
   ggtitle("Distribuicao da classificacao do episodio ao longo das temporadas") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-Black Mirror apresenta uma variacao da avaliacao dos episodios com o passar das temporadas mas fica dificil afirmar algo. Já Sense8 podemos observar um crescimento da avaliação dos episódios.
+Black Mirror apresenta uma variação considerável da avaliação dos episódios mas fica difícil afirmar algo com relação as temporadas especificamente. Já Sense8 podemos observar pouca variação e também uma curva crescente.
 
-Precisamente a avaliação dos episodios cresceu ou decresceu? Observando o grafico abaixo fica facil perceber como se comporta a avaliacao dos episodios com o passar das temporadas.
+Precisamente a avaliação dos episodios cresceu ou decresceu ao longo de cada temporada? 
 ```{r, echo=FALSE}
 dados %>% 
     ggplot(aes(x = as.character(season), y = UserRating)) + 
@@ -46,9 +46,7 @@ dados %>%
     facet_grid(series_name ~ .) +
   labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
 ```
-Percebe-se claramente que Black Mirror mantém a avaliação dos episódios se utilizamos a mediana para comparar cada temporada. Ou seja, a serie manteve a avaliacao dos episodios.
-
-Percebe-se claramente também o crescimento da avaliacao dos episodios de Sense8 se utilizamos a mediana para comparar cada temporada. Ou seja, houve um crescimento da avaliação dos episódios.
+Utilizando a mediana como métrica de comparação, percebe-se claramente que Black Mirror mantém a avaliação dos episódios(variação em termos de décimos). Percebe-se também o crescimento da avaliacao dos episodios de Sense8.
 
 A avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razão de décimos, já a avaliação dos episódios da nova temporada de Sense8 houve um crescimento quando comparados a avaliação dos episódios da temporada anterior. Quanto a série 13 Reasons Why nada se pode afirmar porque a mesma só teve uma temporada.
 
