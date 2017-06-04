@@ -19,9 +19,9 @@ library("readr")
 dados = read_csv(file = "../dados/series_from_imdb.csv")
 dados = dados %>% filter(series_name %in% c("Sense8", "Black Mirror"))
 ```
-Estamos interessados em investigar como se comportou a avaliação de uma nova temporada, de cada uma das séries mencionadas acima, após o término de uma temporada anterior. A avaliação dos episódios de uma nova temporada cresceu ou decresceu quando são comparados a avaliação dos episódios da temporada anterior?
+Neste post vamos investigar como se comportou a avaliação de uma nova temporada após o término de uma temporada anterior. Será que a avaliação dos episódios de uma nova temporada cresce ou decresce quando a mesma é comparada a avaliação da temporada anterior?
 
-Olhando para o gráfico abaixo fica fácil estudar o crescimento ou decrescimento da curva de avaliação de todos os episódios da série.
+Para responder essa pergunta vamos olhar para o gráfico que representa a curva de avaliação de todos os episódios da série.
 ```{r, echo=FALSE}
 dados %>%
   ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
@@ -35,21 +35,21 @@ dados %>%
   ggtitle("Distribuicao da classificacao do usuario ao longo dos episodios") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-Black Mirror apresenta uma variação considerável da avaliação dos episódios mas fica difícil afirmar algo com relação as temporadas especificamente. Já Sense8 podemos observar pouca variação e também uma curva crescente.
+Black Mirror apresenta uma variação considerável da avaliação dos episódios se comparada a série Sense8, além disso, esta também apresenta uma curva crescente.
 
-Precisamente a avaliação dos episodios cresceu ou decresceu ao longo de cada temporada? 
+Precisamente a avaliação dos episódios cresceu ou decresceu ao longo de cada temporada? 
 ```{r, echo=FALSE}
 dados %>% 
     ggplot(aes(x = as.character(season), y = UserRating)) + 
     geom_boxplot(outlier.color = NA) +   
     geom_jitter(width = .1, 
-                size = .5,
                 alpha = .5, color = "red")+
     facet_grid(series_name ~ .) +
-  labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario")
+  labs(title = "Box-plot da classificacao do usuario por temporada da serie", x="Temporada", y="Classificacao do usuario") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
-Utilizando a mediana como métrica de comparação, percebe-se claramente que Black Mirror mantém a avaliação dos episódios(variação em termos de décimos). Percebe-se também o crescimento da avaliacao dos episodios de Sense8.
+Utilizando a mediana como métrica de comparação percebe-se claramente que Black Mirror mantém a avaliação dos episódios(variação em termos de décimos). Percebe-se também o crescimento da avaliação dos episódios de Sense8.
 
-A avaliacao dos episodios das novas temporadas de Black Mirror foi mantida variando sob uma razão de décimos, já a avaliação dos episódios da nova temporada de Sense8 houve um crescimento quando comparados a avaliação dos episódios da temporada anterior.
+Podemos concluir que a avaliação dos episódios das novas temporadas de Black Mirror foi mantida enquanto a avaliação dos episódios da nova temporada de Sense8 foi acrescida.
 
 Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema1/R)
