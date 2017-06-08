@@ -12,14 +12,13 @@ library(ggplot2)
 library(readr)
 library(plotly)
 
+dados = read_csv(file = "dados/series_from_imdb.csv")
 shinyServer(function(input, output) {
 
   output$distPlot <- renderPlotly({
-    dados = read_csv(file = "dados/series_from_imdb.csv")
     dados = dados %>% filter(series_name == input$select)
-    
     dados %>% 
-      ggplot(aes(x = series_ep, y = UserRating)) +
+      ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
       geom_line() +
       geom_point() +
       scale_y_continuous() +
@@ -31,9 +30,7 @@ shinyServer(function(input, output) {
   })
   
   output$distPlot2 <- renderPlotly({
-    dados = read_csv(file = "dados/series_from_imdb.csv")
     dados = dados %>% filter(series_name == input$select)
-    
     dados %>% 
       ggplot(aes(x = as.character(season), y = UserRating)) + 
       geom_boxplot(outlier.color = NA) +   

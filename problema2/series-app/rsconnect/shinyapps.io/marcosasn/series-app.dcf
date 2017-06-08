@@ -3,8 +3,8 @@ title: series-app
 account: marcosasn
 server: shinyapps.io
 appId: 187271
-bundleId: 858394
+bundleId: 858815
 url: https://marcosasn.shinyapps.io/series-app/
-when: 1496932267.92356
+when: 1496950488.34271
 asMultiple: FALSE
 asStatic: FALSE
