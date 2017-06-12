@@ -32,15 +32,17 @@ shinyUI(
     # Show a plot of the generated distribution
       mainPanel(
         h1("Como se comporta a avaliação de uma série com o passar dos episódios? E das temporadas?"),
-        p("Neste post vamos investigar como se comportou a avaliação de uma nova temporada após o término de uma temporada anterior. Será que a avaliação dos episódios de uma nova temporada cresce ou decresce quando a mesma é comparada a avaliação da temporada anterior?"),
-        p("Para responder essa pergunta vamos olhar para o gráfico que representa a curva de avaliação de todos os episódios da série."),
+        p("Neste post vamos investigar como se comporta a avaliação de uma nova temporada após o término de uma temporada anterior. Será que a avaliação dos episódios de uma nova temporada cresce ou decresce quando a mesma é comparada a avaliação da temporada anterior?"),
+        p("Para responder essa pergunta vamos primeiramente olhar para o gráfico abaixo, veja como se comporta a curva de avaliação de cada episódio da série."),
         fluidRow(
           column(12,plotlyOutput("distPlot"))
         ),
-        p("Precisamente a avaliação dos episódios cresceu ou decresceu ao longo de cada temporada? Veja como é classificada cada temporada ao longo da série."),
+        p("Precisamente a avaliação dos episódios cresce ou decresce ao longo de cada temporada? Para responder esta pergunta basta ver como é classificada cada temporada ao longo da série."),
         fluidRow(
           column(12,plotlyOutput("distPlot2"))
-        ))
+        ),
+        p("O gráfico acima facilita o processo de comparação de cada temporada por meio da mediana de classificação do usuário calculada em cada temporada.")
+        )
       )
     )
 )

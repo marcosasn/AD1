@@ -11,6 +11,7 @@ library(tidyr)
 library(ggplot2)
 library(readr)
 library(plotly)
+library(plyr)
 
 dados = read_csv(file = "dados/series_from_imdb.csv")
 shinyServer(function(input, output) {
@@ -33,7 +34,7 @@ shinyServer(function(input, output) {
     dados = dados %>% filter(series_name == input$select)
     dados %>% 
       ggplot(aes(x = as.character(season), y = UserRating)) + 
-      geom_boxplot(outlier.color = NA) +   
+      geom_boxplot(outlier.color = NA) +
       geom_jitter(width = .1, 
                   alpha = .5, color = "red")+
       labs(title = "Box-plot da classificação do usuário por temporada da série", x="Temporada", y="Classificação do usuário") +
