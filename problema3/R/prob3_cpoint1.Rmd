@@ -5,11 +5,11 @@ date: "16 de junho de 2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 library(tidyverse, warn.conflicts = F)
 library(rvest)
 library(plotly)
@@ -17,15 +17,7 @@ library(cluster)
 library(ggdendro)
 theme_set(theme_light())
 source("plota_solucoes_hclust.R")
-```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r}
 from_page <- read_html("https://www.rottentomatoes.com/celebrity/lindsay_lohan") %>% 
     html_node("#filmographyTbl") %>% # A sintaxe da expressão é de um seletor à lá JQuery: https://rdrr.io/cran/rvest/man/html_nodes.html 
     html_table(fill=TRUE) %>% # Faz parse
@@ -37,9 +29,76 @@ filmes = from_page %>%
             CREDIT != "Executive Producer") %>%
            mutate(RATING = as.numeric(gsub("%", "", RATING)), 
            `BOX OFFICE` = as.numeric(gsub("[$|M]", "", `BOX OFFICE`))) %>% 
-    filter(`BOX OFFICE` != 'NA') # Tem dois filmes que não parecem ter sido lançados no mundo todo
+    filter(`BOX OFFICE` != 'NA') # Tem sete filmes que não parecem ter sido lançados no mundo todo
 ```
 
+# Tipos de filme de Lindsay Lohan
+Neste post vamos investigar a existência de grupos de filmes com comportamentos comuns para os atuados pela atriz Lindsay Lohan. Previamente a atriz parece ter atuado em alguns filmes mais frequentemente quando fazia parte das estrelas Disney e nos dias atuais de forma mais esporádica. Será que existem grupos que definem comportamentos comuns para os filmes da atriz levando em consideração o sucesso de público e a crítica? Utilizaremos os dados cedidos pelo site Rotten Tomatoes.
+
+Antes de mais nada precisamos descrever as variáveis que serão utilizadas para ver se já delineam a existência de grupos comuns de filmes. 
+
+## A descrição
+Vamos primeiramente olhar para o gráfico abaixo, veja como se comporta a distribuição de avaliação de cada filme da atriz.
+```{r}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = RATING)) + 
+    geom_jitter(width = .01, height = 0, size = 2, alpha = .6, color = "red") +
+  labs(title = "Distribuição da avaliação do filme", x="Filmes", y="Avaliação") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Observando as avaliações dos filmes podemos observar uma tendência de grupos. Esses grupos ficam ainda mais evidentes quando geramos o gráfico de contagem de frequência de cada avaliação, vide abaixo. As avaliações mais próximas e separadas por gaps poderiam ser as fronteiras entre os grupos.
+```{r}
+filmes %>% 
+    ggplot(aes(x = RATING)) + 
+    geom_histogram(bins = 16, fill = "red", color = "black") + 
+    geom_rug() +
+   labs(title = "Histograma da avaliação", x="Avaliação", y = "Frequência") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Veja como se comporta a distribuição da renda de cada filme da atriz.
+```{r}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+    geom_jitter(width = .02, height = 0, size = 2, alpha = .6, color = "red") +
+  labs(title = "Distribuição da bilheteria", x="Filmes", y="Bilheteria") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos ver alguns grupos de filmes bem próximos quanto ao sucesso de público. O maior grupo define os filmes com bilheteria inferior a 40 milhões de dólares. Ainda sobre a bilheteria podemos observar se os valores de bilheteria são frequentes.
+
+```{r}
+filmes %>% 
+    ggplot(aes(x = `BOX OFFICE`)) + 
+    geom_histogram(bins = 20, fill = "red", color = "black") + 
+    geom_rug() +
+  labs(title = "Histograma de bilheteria", x="Bilheteria", y = "Frequência") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Quanto a frequência de bilheterias comuns observamos que a maioria dos valores de bilheteria são distintos e existem valores duplicados. Poderia ser interessante analisar o comportamento da distribuição de bilheteria dos filmes em uma outra escala já que a concentração de valores de bilheteria impede uma melhor visualização da real magnitude dos valores.
+```{r}
+filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+    geom_jitter(width = .02, height = 0, size = 2, alpha = .6, color = "red") + 
+    scale_y_log10() +
+  labs(title = "Distribuição da bilheteria", x="Filmes", y="Bilheteria") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Um valor de bilheteria que anteriormente parecia fazer parte de um grupo majoritário de valores contém o menor valor de bilheteria. Isso fica ainda mais evidente se olharmos o gráfico de histograma abaixo para a contagem de frequência de bilheteria de cada filme na escala logarítmica.
+```{r}
+filmes %>% 
+    ggplot(aes(x = `BOX OFFICE`)) + 
+    geom_histogram(bins = 20, fill = "red", color = "black") + 
+    scale_x_log10() + 
+    geom_rug() +
+  labs(title = "Histograma de bilheteria", x="Bilheteria", y = "Frequência") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# Agrupamento com duas dimensões
 ```{r}
 p = filmes %>% 
     ggplot(aes(x = RATING, y = `BOX OFFICE`, label = TITLE)) + 
@@ -68,5 +127,32 @@ plota_hclusts_2d(agrupamento_h_2d,
                  filmes, 
                  c("RATING", "`BOX OFFICE`"), 
                  linkage_method = "centroid", ks = 1:6)
+```
+```{r}
+agrupamento_h_2d = filmes %>% 
+    column_to_rownames("TITLE") %>%
+    select(RATING, `BOX OFFICE`) %>% 
+    mutate(`BOX OFFICE` = log10(`BOX OFFICE`)) %>% 
+    mutate_all(funs(scale)) %>% 
+    dist(method = "euclidean") %>% 
+    hclust(method = "centroid")
+
+ggdendrogram(agrupamento_h_2d, rotate = TRUE)
+
+filmes2 = filmes %>% mutate(`BOX OFFICE` = log10(`BOX OFFICE`))
+plota_hclusts_2d(agrupamento_h_2d, 
+                 filmes2, 
+                 c("RATING", "`BOX OFFICE`"), 
+                 linkage_method = "ward.D", ks = 1:6) + scale_y_log10()
+```
+```{r, warning=FALSE}
+distancias = filmes %>% 
+    column_to_rownames("TITLE") %>%
+    select(RATING, `BOX OFFICE`) %>% 
+    mutate(`BOX OFFICE` = log10(`BOX OFFICE`)) %>% 
+    mutate_all(funs(scale)) %>% 
+    dist(method = "euclidean")
+
+plot(silhouette(cutree(agrupamento_h_2d, k = 4), distancias))
 ```
 
