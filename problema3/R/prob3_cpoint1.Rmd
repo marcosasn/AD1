@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load_code, echo=FALSE, warning=FALSE}
+```{r load_code}
 library(tidyverse, warn.conflicts = F)
 library(rvest)
 library(plotly)
@@ -28,7 +28,7 @@ filmes = from_page %>%
            `BOX OFFICE` != "—", 
             CREDIT != "Executive Producer") %>%
            mutate(RATING = as.numeric(gsub("%", "", RATING)), 
-           `BOX OFFICE` = as.numeric(gsub("[$|M]", "", `BOX OFFICE`))) %>% 
+           `BOX OFFICE` = as.numeric(gsub("[$|M|k]", "", `BOX OFFICE`))) %>% 
     filter(`BOX OFFICE` != 'NA') # Tem sete filmes que não parecem ter sido lançados no mundo todo
 ```
 
@@ -40,14 +40,16 @@ Antes de mais nada precisamos descrever as variáveis que serão utilizadas para
 ## A descrição
 Vamos primeiramente olhar para o gráfico abaixo, veja como se comporta a distribuição de avaliação de cada filme da atriz.
 ```{r}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = RATING)) + 
+dist_avaliacao = filmes %>% 
+  ggplot(aes(x = "Filmes", y = RATING, label = TITLE)) + 
     geom_jitter(width = .01, height = 0, size = 2, alpha = .6, color = "red") +
   labs(title = "Distribuição da avaliação do filme", x="Filmes", y="Avaliação") +
   theme(plot.title = element_text(hjust = 0.5))
+
+ggplotly(dist_avaliacao)
 ```
 
-Observando as avaliações dos filmes podemos observar uma tendência de grupos. Esses grupos ficam ainda mais evidentes quando geramos o gráfico de contagem de frequência de cada avaliação, vide abaixo. As avaliações mais próximas e separadas por gaps poderiam ser as fronteiras entre os grupos.
+Observando as avaliações dos filmes podemos observar uma tendência de grupos. Esses grupos ficam ainda mais evidentes quando geramos o gráfico de contagem de frequência de cada avaliação (vide abaixo). As avaliações mais próximas poderiam sugerir os grupos e os gaps os delimitadores entre cada um deles.
 ```{r}
 filmes %>% 
     ggplot(aes(x = RATING)) + 
@@ -59,15 +61,15 @@ filmes %>%
 
 Veja como se comporta a distribuição da renda de cada filme da atriz.
 ```{r}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+dist_renda = filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`, label = TITLE)) + 
     geom_jitter(width = .02, height = 0, size = 2, alpha = .6, color = "red") +
   labs(title = "Distribuição da bilheteria", x="Filmes", y="Bilheteria") +
   theme(plot.title = element_text(hjust = 0.5))
+ggplotly(dist_renda)
 ```
 
-Podemos ver alguns grupos de filmes bem próximos quanto ao sucesso de público. O maior grupo define os filmes com bilheteria inferior a 40 milhões de dólares. Ainda sobre a bilheteria podemos observar se os valores de bilheteria são frequentes.
-
+Podemos ver uma estrutura de grupo de filmes bem próximos quanto ao sucesso de público. O maior grupo define os filmes com bilheteria inferior a 40 milhões de dólares. Ainda sobre a bilheteria podemos observar se os valores de bilheteria são frequentes.
 ```{r}
 filmes %>% 
     ggplot(aes(x = `BOX OFFICE`)) + 
@@ -77,17 +79,18 @@ filmes %>%
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-Quanto a frequência de bilheterias comuns observamos que a maioria dos valores de bilheteria são distintos e existem valores duplicados. Poderia ser interessante analisar o comportamento da distribuição de bilheteria dos filmes em uma outra escala já que a concentração de valores de bilheteria impede uma melhor visualização da real magnitude dos valores.
+Quanto a frequência de bilheterias comuns observamos que a maioria dos valores de bilheteria são distintos e existem poucos valores duplicados. Poderia ser interessante analisar o comportamento da distribuição de bilheteria dos filmes em uma outra escala já que a concentração de valores de bilheteria impede uma melhor visualização da real magnitude dos valores.
 ```{r}
-filmes %>% 
-    ggplot(aes(x = "Filmes", y = `BOX OFFICE`)) + 
+dist_renda_logscale = filmes %>% 
+    ggplot(aes(x = "Filmes", y = `BOX OFFICE`, label=TITLE)) + 
     geom_jitter(width = .02, height = 0, size = 2, alpha = .6, color = "red") + 
     scale_y_log10() +
   labs(title = "Distribuição da bilheteria", x="Filmes", y="Bilheteria") +
   theme(plot.title = element_text(hjust = 0.5))
+ggplotly(dist_renda_logscale)
 ```
 
-Um valor de bilheteria que anteriormente parecia fazer parte de um grupo majoritário de valores contém o menor valor de bilheteria. Isso fica ainda mais evidente se olharmos o gráfico de histograma abaixo para a contagem de frequência de bilheteria de cada filme na escala logarítmica.
+Um valor de bilheteria que anteriormente parecia fazer parte de um grupo majoritário de valores contém o menor valor de bilheteria. Isso fica ainda mais evidente se olharmos o gráfico de histograma abaixo para a contagem de frequência de bilheteria de cada filme na escala logarítimica.
 ```{r}
 filmes %>% 
     ggplot(aes(x = `BOX OFFICE`)) + 
@@ -103,7 +106,7 @@ filmes %>%
 p = filmes %>% 
     ggplot(aes(x = RATING, y = `BOX OFFICE`, label = TITLE)) + 
     geom_point(color="red") 
-p
+ggplotly(p)
 ```
 
 ```{r}
@@ -113,7 +116,8 @@ agrupamento_h_2d = filmes %>%
     dist(method = "euclidean") %>% 
     hclust(method = "centroid")
 
-ggdendrogram(agrupamento_h_2d, rotate = TRUE)
+ggdendrogram(agrupamento_h_2d, rotate = TRUE) +
+  geom_hline(yintercept = 35, colour = "red")
 
 data.frame(k = NROW(agrupamento_h_2d$height):1, 
            height = agrupamento_h_2d$height) %>% 
@@ -131,10 +135,18 @@ plota_hclusts_2d(agrupamento_h_2d,
                  linkage_method = "centroid", ks = 1:6)
 ```
 
+Observando o gráfico do dendrograma fica apropriado escolher 4 grupos já que os 4 grupos vão conter elementos menos distintos e mais característicos daquele grupo. Observando a tabela de filmes eu não observei muita discrepância entre os valores de BOX OFFICE e RATING e também observando o gráfico de agrupamento bidimensional eu não consigo observar que ou uma ou outra esteja sendo predominante na hora de realizar o agrupamento, por isto, acredito que a técnica de transformação de variável não seria necessária.
+
 O agrupamento está acontecendo todo em função de BOX OFFICE, apenas. Como as escalas são diferentes, BOX OFFICE domina qualquer cálculo de distância euclidiana. 
 
 Solução: standardize (aka scale).
 ```{r}
+p2 = filmes %>% 
+    ggplot(aes(x = RATING, y = `BOX OFFICE`, label = TITLE)) + 
+    geom_point(color="red") +
+  scale_y_log10()
+ggplotly(p2)
+
 agrupamento_h_2d = filmes %>% 
     column_to_rownames("TITLE") %>%
     select(RATING, `BOX OFFICE`) %>% 
@@ -159,6 +171,7 @@ distancias = filmes %>%
     mutate_all(funs(scale)) %>% 
     dist(method = "euclidean")
 
-plot(silhouette(cutree(agrupamento_h_2d, k = 4), distancias))
+plot(silhouette(cutree(agrupamento_h_2d, k = 5), distancias))
 ```
 
+Observando o gráfico do dendrograma fica apropriado escolher 4 grupos já que os 4 grupos vão conter elementos menos distintos e mais característicos daquele grupo. Observando os grupos formados eles não são os mesmos da análise anterior.
