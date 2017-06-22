@@ -75,11 +75,11 @@ filmes %>%
     ggplot(aes(x = `BOX OFFICE`)) + 
     geom_histogram(bins = 20, fill = "red", color = "black") + 
     geom_rug() +
-  labs(title = "Histograma de bilheteria", x="Bilheteria", y = "Frequência") +
+  labs(title = "Histograma da bilheteria", x="Bilheteria", y = "Frequência") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-Quanto a frequência de bilheterias comuns observamos que a maioria dos valores de bilheteria são distintos e existem poucos valores duplicados. Poderia ser interessante analisar o comportamento da distribuição de bilheteria dos filmes em uma outra escala já que a concentração de valores de bilheteria impede uma melhor visualização da real magnitude dos valores.
+Quanto a frequência de bilheterias comuns observamos que a maioria dos valores de bilheteria são distintos e existem poucos valores duplicados. Poderia ser interessante analisar o comportamento da distribuição de bilheteria dos filmes em uma outra escala já que a maior concentração de valores de bilheteria impede uma melhor visualização da real magnitude dos valores.
 ```{r}
 dist_renda_logscale = filmes %>% 
     ggplot(aes(x = "Filmes", y = `BOX OFFICE`, label=TITLE)) + 
@@ -97,18 +97,23 @@ filmes %>%
     geom_histogram(bins = 20, fill = "red", color = "black") + 
     scale_x_log10() + 
     geom_rug() +
-  labs(title = "Histograma de bilheteria", x="Bilheteria", y = "Frequência") +
+  labs(title = "Histograma da bilheteria", x="Bilheteria", y = "Frequência") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 # Agrupamento com duas dimensões
+##Sem normalização e sem transformação
+Podemos perceber pela descrição das variáveis que a crítica e a bilheteria já tendenciam a estrutura de grupos mas como ficaria o gráfico de distribuição dessas duas variáveis?
 ```{r}
-p = filmes %>% 
+dist_avaliacao_renda = filmes %>% 
     ggplot(aes(x = RATING, y = `BOX OFFICE`, label = TITLE)) + 
-    geom_point(color="red") 
-ggplotly(p)
+    geom_point(color="red") +
+  labs(title = "Distribuição da avaliação e da bilheteria", x="Avaliação", y="Bilheteria") +
+  theme(plot.title = element_text(hjust = 0.5))
+ggplotly(dist_avaliacao_renda)
 ```
 
+Quais seriam os possíveis grupos para esta distribuição bidimensional?
 ```{r}
 agrupamento_h_2d = filmes %>% 
     column_to_rownames("TITLE") %>%
@@ -117,36 +122,47 @@ agrupamento_h_2d = filmes %>%
     hclust(method = "centroid")
 
 ggdendrogram(agrupamento_h_2d, rotate = TRUE) +
-  geom_hline(yintercept = 35, colour = "red")
-
-data.frame(k = NROW(agrupamento_h_2d$height):1, 
-           height = agrupamento_h_2d$height) %>% 
-    ggplot(aes(x = k, y = height)) + 
-    geom_line(colour = "grey") + 
-    geom_point() + 
-    labs(x = "Número de clusters produzido", y = "Dissimilaridade na junção")
+  geom_hline(yintercept = 30, colour = "red")
 ```
 
-Como sempre, o algoritmo encontra grupos. No caso, parecem até bem separados. Vamos visualizá-los:
+Observando o gráfico do dendrograma acima fica apropriado escolher 4 grupos já que os mesmos vão conter filmes menos distintos e mais característicos daquele grupo no qual estão inseridos. Como ficariam dispostos os nossos grupos de filmes?
 ```{r}
 plota_hclusts_2d(agrupamento_h_2d, 
                  filmes, 
                  c("RATING", "`BOX OFFICE`"), 
-                 linkage_method = "centroid", ks = 1:6)
+                 linkage_method = "centroid", ks = 1:6) %>% ggplotly()
 ```
 
-Observando o gráfico do dendrograma fica apropriado escolher 4 grupos já que os 4 grupos vão conter elementos menos distintos e mais característicos daquele grupo. Observando a tabela de filmes eu não observei muita discrepância entre os valores de BOX OFFICE e RATING e também observando o gráfico de agrupamento bidimensional eu não consigo observar que ou uma ou outra esteja sendo predominante na hora de realizar o agrupamento, por isto, acredito que a técnica de transformação de variável não seria necessária.
-
-O agrupamento está acontecendo todo em função de BOX OFFICE, apenas. Como as escalas são diferentes, BOX OFFICE domina qualquer cálculo de distância euclidiana. 
-
-Solução: standardize (aka scale).
+Escolhendo 4 grupos esta escolha agruparia filmes característicos do grupo no qual estariam inseridos?
 ```{r}
-p2 = filmes %>% 
+distancias = filmes %>% 
+    column_to_rownames("TITLE") %>%
+    select(RATING, `BOX OFFICE`) %>% 
+    dist(method = "euclidean")
+
+plot(silhouette(cutree(agrupamento_h_2d, k = 4), distancias))
+```
+
+Observando o gráfico acima parece que sim porque cada grupo contém filmes característicos daquele grupo.
+
+##Com normalização e com transformação
+Na seção anterior não fizemos normalização ou padronização dos dados antes de reuni-los em clusters, isto seria adequado? Seria certo ou justo comparar variáveis de escalas divergentes e afirmar algo sensato? Você certamente deve estar ciente que não.
+
+A técnica de transformação não foi aplicada na seção anterior. Seria apropriado afirmar algo sobre grupos de valores em um gráfico sem observar como o mesmo se comporta em uma outra escala? A resposta mais sensata também seria não. Na seção de descrição das variáveis notamos que um filme que teve a pior bilheteria não foi distinto de um grupo com valores de bilheterias maiores. Como levar isso em consideração? 
+
+Veja como fica o gráfico de distribuição da crítica e da renda quando observamos a renda na escala logarítimica.
+```{r}
+dist_avaliacao_renda = filmes %>% 
     ggplot(aes(x = RATING, y = `BOX OFFICE`, label = TITLE)) + 
     geom_point(color="red") +
-  scale_y_log10()
-ggplotly(p2)
+  scale_y_log10() +
+  labs(title = "Distribuição da avaliação e da bilheteria", x="Avaliação", y="Bilheteria") + 
+  theme(plot.title = element_text(hjust = 0.5))
+ggplotly(dist_avaliacao_renda)
+```
 
+Quais seriam os possíveis grupos para esta distribuição bidimensional se as variáveis fossem normalizadas e o eixo de bilheteria fosse transformado para a escala logarítimica?
+```{r}
 agrupamento_h_2d = filmes %>% 
     column_to_rownames("TITLE") %>%
     select(RATING, `BOX OFFICE`) %>% 
@@ -158,11 +174,13 @@ agrupamento_h_2d = filmes %>%
 ggdendrogram(agrupamento_h_2d, rotate = TRUE)
 
 filmes2 = filmes %>% mutate(`BOX OFFICE` = log10(`BOX OFFICE`))
-plota_hclusts_2d(agrupamento_h_2d, 
+ggplotly(plota_hclusts_2d(agrupamento_h_2d, 
                  filmes2, 
                  c("RATING", "`BOX OFFICE`"), 
-                 linkage_method = "ward.D", ks = 1:6) + scale_y_log10()
+                 linkage_method = "ward.D", ks = 1:6) + scale_y_log10())
 ```
+
+Escolhendo 4 grupos esta escolha ainda agruparia filmes característicos do grupo no qual estariam inseridos?
 ```{r, warning=FALSE}
 distancias = filmes %>% 
     column_to_rownames("TITLE") %>%
@@ -171,7 +189,12 @@ distancias = filmes %>%
     mutate_all(funs(scale)) %>% 
     dist(method = "euclidean")
 
-plot(silhouette(cutree(agrupamento_h_2d, k = 5), distancias))
+plot(silhouette(cutree(agrupamento_h_2d, k = 4), distancias))
 ```
 
-Observando o gráfico do dendrograma fica apropriado escolher 4 grupos já que os 4 grupos vão conter elementos menos distintos e mais característicos daquele grupo. Observando os grupos formados eles não são os mesmos da análise anterior.
+Observando o gráfico acima parece que esta escolha agrupa um filme em um agrupamento que não lhe caracteriza tão bem embora isso não vá fazer tanta diferença e impactar tanto na análise.
+
+# Conclusão
+O ideal é realizar a normalização com transformação da variável bilheteria. Uma escolha dos grupos poderia ser 4. Esta escolha agruparia os filmes da atriz sem prejuízo de informação. Os nomes para os grupos seriam: os **piores filmes**, os **filmes medianos**, os **filmes que você deveria ver** e os **melhores filmes**.
+
+Os **piores filmes** são aqueles que não fizeram sucesso de público e nem foram bem avaliados (por ex. InAPPropriate Comedy). Os **filmes medianos** são aqueles que tiveram um sucesso considerável de público e ainda assim não foram bem avaliados (por ex. The Canyons). Os **filmes que você deveria ver** aqueles filmes que foram bem avaliados mas não tiveram sucesso de público (por ex. Love, Marilyn) e os **melhores filmes** aqueles que tiveram sucesso de público e de avaliação (por ex. Mean Girls).
