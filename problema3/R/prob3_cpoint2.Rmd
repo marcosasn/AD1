@@ -1,0 +1,44 @@
+---
+title: "Problema 3 - Checkpoint 2"
+author: Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)
+date: "16 de junho de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_code}
+library(tidyverse, warn.conflicts = F)
+library(rvest)
+library(plotly)
+library(cluster)
+library(ggdendro)
+theme_set(theme_light())
+source("plota_solucoes_hclust.R")
+
+from_page <- read_html("https://www.rottentomatoes.com/celebrity/lindsay_lohan") %>% 
+    html_node("#filmographyTbl") %>% # A sintaxe da expressão é de um seletor à lá JQuery: https://rdrr.io/cran/rvest/man/html_nodes.html 
+    html_table(fill=TRUE) %>% # Faz parse
+    as.tibble()
+
+filmes = from_page %>% 
+    filter(RATING != "No Score Yet", 
+           `BOX OFFICE` != "—", 
+            CREDIT != "Executive Producer") %>%
+           mutate(RATING = as.numeric(gsub("%", "", RATING)), 
+           `BOX OFFICE` = as.numeric(gsub("[$|M|k]", "", `BOX OFFICE`))) %>% 
+    filter(`BOX OFFICE` != 'NA') # Tem sete filmes que não parecem ter sido lançados no mundo todo
+```
+
+# Tipos de filme
+
+## A descrição
+
+# Agrupamento com duas dimensões
+##Sem normalização e sem transformação
+
+##Com normalização e com transformação
+
+# Conclusão
