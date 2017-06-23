@@ -22,9 +22,21 @@ personagens = personagens %>% filter(age != 'NULL') %>% mutate(age = as.numeric(
 filmes = read_csv(file = "../dados/film-dialogue/meta_data7.csv")
 filmes = filmes %>% filter(gross != 'NA')
 
-no = read_csv("../dados/film-dialogue/character_mapping.csv")
+#no = read_csv("../dados/film-dialogue/character_mapping.csv")
 
 filmes_personagens = merge(filmes, personagens, by="script_id")
+
+mulheres = filmes_personagens %>%
+  filter(gender == 'f') %>%
+  group_by(script_id, imdb_id, title) %>%
+  summarise(n_gender_f=n(), median_words_f=median(words), median_age_f=median(age))
+
+homens = filmes_personagens %>%
+  filter(gender == 'm') %>%
+  group_by(script_id, imdb_id, title) %>%
+  summarise(n_gender_m=n(), median_words_m=median(words), median_age_m=median(age))
+
+filmes_personagens = merge(mulheres, homens, by=c('script_id','imdb_id','title'))
 ```
 
 # Tipos de filme
