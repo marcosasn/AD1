@@ -15,21 +15,14 @@ library(rvest)
 library(plotly)
 library(cluster)
 library(ggdendro)
-theme_set(theme_light())
-source("plota_solucoes_hclust.R")
 
-from_page <- read_html("https://www.rottentomatoes.com/celebrity/lindsay_lohan") %>% 
-    html_node("#filmographyTbl") %>% # A sintaxe da expressão é de um seletor à lá JQuery: https://rdrr.io/cran/rvest/man/html_nodes.html 
-    html_table(fill=TRUE) %>% # Faz parse
-    as.tibble()
+personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
+personagens = personagens %>% filter(age != 'NULL') %>% mutate(age = as.numeric(age))
 
-filmes = from_page %>% 
-    filter(RATING != "No Score Yet", 
-           `BOX OFFICE` != "—", 
-            CREDIT != "Executive Producer") %>%
-           mutate(RATING = as.numeric(gsub("%", "", RATING)), 
-           `BOX OFFICE` = as.numeric(gsub("[$|M|k]", "", `BOX OFFICE`))) %>% 
-    filter(`BOX OFFICE` != 'NA') # Tem sete filmes que não parecem ter sido lançados no mundo todo
+filmes = read_csv(file = "../dados/film-dialogue/meta_data7.csv")
+filmes = filmes %>% filter(gross != 'NA')
+
+no = read_csv("../dados/film-dialogue/character_mapping.csv")
 ```
 
 # Tipos de filme
