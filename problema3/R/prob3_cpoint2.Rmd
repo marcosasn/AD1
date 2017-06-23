@@ -23,6 +23,8 @@ filmes = read_csv(file = "../dados/film-dialogue/meta_data7.csv")
 filmes = filmes %>% filter(gross != 'NA')
 
 no = read_csv("../dados/film-dialogue/character_mapping.csv")
+
+filmes_personagens = merge(filmes, personagens, by="script_id")
 ```
 
 # Tipos de filme
