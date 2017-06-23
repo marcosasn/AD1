@@ -10,34 +10,62 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load_code}
-library(tidyverse, warn.conflicts = F)
-library(rvest)
-library(plotly)
+require(GGally, quietly = TRUE)
+require(reshape2, quietly = TRUE)
+require(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
+library(ggfortify)
 library(cluster)
 library(ggdendro)
+library(broom)
+
+theme_set(theme_bw())
 
 personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
-personagens = personagens %>% filter(age != 'NULL') %>% mutate(age = as.numeric(age))
+personagens = personagens %>%
+  filter(age != 'NULL') %>% 
+  mutate(age = as.numeric(age))
 
 filmes = read_csv(file = "../dados/film-dialogue/meta_data7.csv")
-filmes = filmes %>% filter(gross != 'NA')
-
-#no = read_csv("../dados/film-dialogue/character_mapping.csv")
+filmes = filmes %>%
+  filter(gross != 'NA')
 
 filmes_personagens = merge(filmes, personagens, by="script_id")
 
 mulheres = filmes_personagens %>%
   filter(gender == 'f') %>%
-  group_by(script_id, imdb_id, title) %>%
+  group_by(script_id, imdb_id, title, year, gross) %>%
   summarise(n_gender_f=n(), median_words_f=median(words), median_age_f=median(age))
 
 homens = filmes_personagens %>%
   filter(gender == 'm') %>%
-  group_by(script_id, imdb_id, title) %>%
+  group_by(script_id, imdb_id, title, year, gross) %>%
   summarise(n_gender_m=n(), median_words_m=median(words), median_age_m=median(age))
-
-filmes_personagens = merge(mulheres, homens, by=c('script_id','imdb_id','title'))
 ```
+
+```{r}
+dados = merge(mulheres, homens, 
+                           by=c('script_id','imdb_id','title','year','gross'))
+
+dados = dados %>% subset(select = -c(script_id,imdb_id, median_age_f, median_age_m))
+
+dw2 <- dados %>% 
+    mutate_each(funs(log), 3:6)
+
+dw2 %>% 
+    select(-title) %>% 
+    ggpairs()
+
+summary(select(dw2, -title))
+
+dw2.scaled = dw2 %>% 
+  mutate_each(funs(as.vector(scale(.))), 3:6)
+summary(dw2.scaled)
+
+dw2.scaled %>% 
+    select(-title) %>% 
+    ggpairs()
+```
+
 
 # Tipos de filme
 
