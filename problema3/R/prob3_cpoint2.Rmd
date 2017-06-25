@@ -34,22 +34,22 @@ filmes_personagens = merge(filmes, personagens, by="script_id")
 mulheres = filmes_personagens %>%
   filter(gender == 'f') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_gender_f=n(), median_words_f=median(words), median_age_f=median(age))
+  summarise(n_gender_f=n(), n_words_f=sum(words))
 
 homens = filmes_personagens %>%
   filter(gender == 'm') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_gender_m=n(), median_words_m=median(words), median_age_m=median(age))
+  summarise(n_gender_m=n(), n_words_m=sum(words))
 ```
 
 ```{r}
 dados = merge(mulheres, homens, 
                            by=c('script_id','imdb_id','title','year','gross'))
 
-dados = dados %>% subset(select = -c(script_id,imdb_id, median_age_f, median_age_m))
+dados = dados %>% subset(select = -c(script_id,imdb_id,year,gross))
 
 dw2 <- dados %>% 
-    mutate_each(funs(log), 3:6)
+    mutate_each(funs(log), 2:5)
 
 dw2 %>% 
     select(-title) %>% 
@@ -58,7 +58,7 @@ dw2 %>%
 summary(select(dw2, -title))
 
 dw2.scaled = dw2 %>% 
-  mutate_each(funs(as.vector(scale(.))), 3:6)
+  mutate_each(funs(as.vector(scale(.))), 2:5)
 summary(dw2.scaled)
 
 dw2.scaled %>% 
