@@ -17,6 +17,7 @@ library(ggfortify)
 library(cluster)
 library(ggdendro)
 library(broom)
+library(plotly)
 
 theme_set(theme_bw())
 
@@ -34,22 +35,23 @@ filmes_personagens = merge(filmes, personagens, by="script_id")
 mulheres = filmes_personagens %>%
   filter(gender == 'f') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_gender_f=n(), n_words_f=sum(words))
+  summarise(n_f=n(), words_f=sum(words))
 
 homens = filmes_personagens %>%
   filter(gender == 'm') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_gender_m=n(), n_words_m=sum(words))
+  summarise(n_m=n(), words_m=sum(words))
 ```
 
 ```{r}
 dados = merge(mulheres, homens, 
                            by=c('script_id','imdb_id','title','year','gross'))
 
-dados = dados %>% subset(select = -c(script_id,imdb_id,year,gross))
+dados = dados %>%
+  subset(select = -c(imdb_id,year,gross))
 
 dw2 <- dados %>% 
-    mutate_each(funs(log), 2:5)
+    mutate_each(funs(log), 3:6)
 
 dw2 %>% 
     select(-title) %>% 
@@ -58,12 +60,66 @@ dw2 %>%
 summary(select(dw2, -title))
 
 dw2.scaled = dw2 %>% 
-  mutate_each(funs(as.vector(scale(.))), 2:5)
+  mutate_each(funs(as.vector(scale(.))), 3:6)
 summary(dw2.scaled)
 
 dw2.scaled %>% 
     select(-title) %>% 
     ggpairs()
+```
+```{r}
+dists = dw2.scaled %>% 
+    column_to_rownames("script_id") %>% 
+    dist(method = "euclidean")
+hc = hclust(dists, method = "ward.D")
+
+plot(hc, cex = .6)
+plot(hc, hang = -1)
+
+n_clusters = 4
+rect.hclust(hc, k=n_clusters)
+
+dw2 <- dw2 %>% 
+    mutate(cluster = hc %>% 
+               cutree(k = n_clusters) %>% 
+               as.character())
+
+dw2.scaled <- dw2.scaled %>% 
+    mutate(cluster = hc %>% 
+               cutree(k = n_clusters) %>% 
+               as.character())
+
+dw2.long = melt(dw2.scaled, id.vars = c("title", "cluster"))
+
+hc %>% 
+    cutree(k = n_clusters) %>% 
+    silhouette(dists) %>% 
+    plot(col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
+
+dw2.long %>% 
+    ggplot(aes(x = variable, y = value, group = title, colour = cluster)) + 
+    geom_line(alpha = 0.4) + 
+    facet_wrap(~ cluster) 
+```
+
+```{r}
+p <- dw2 %>%
+    plot_ly(type = 'parcoords',
+            line = list(color = ~cluster),
+            dimensions = list(
+                #list(range = c(1, 4), label = "cluster", values = ~cluster),
+                list(range = c(0, 4),
+                     label = 'n gender f', values = ~n_f),
+                list(range = c(0, 4),
+                     constraintrange = c(5,6),
+                     label = 'n words f', values = ~words_f),
+                list(range = c(0, 4),
+                     label = 'n gender m', values = ~n_m),
+                list(range = c(0, 4),
+                     label = 'n words m', values = ~words_m)
+            )
+    )
+p
 ```
 
 
