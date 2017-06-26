@@ -13,20 +13,24 @@ knitr::opts_chunk$set(echo = TRUE)
 require(GGally, quietly = TRUE)
 require(reshape2, quietly = TRUE)
 require(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
+
 library(ggfortify)
 library(cluster)
 library(ggdendro)
 library(broom)
 library(plotly)
+library(readr)
 
 theme_set(theme_bw())
+```
 
+```{r}
 personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
 personagens = personagens %>%
   filter(age != 'NULL') %>% 
   mutate(age = as.numeric(age))
 
-filmes = read_csv(file = "../dados/film-dialogue/meta_data7.csv")
+filmes = read.csv(file = "../dados/film-dialogue/meta_data7.csv")
 filmes = filmes %>%
   filter(gross != 'NA')
 
@@ -35,23 +39,39 @@ filmes_personagens = merge(filmes, personagens, by="script_id")
 mulheres = filmes_personagens %>%
   filter(gender == 'f') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_f=n(), words_f=sum(words))
+  summarise(n_f=n(), words_f=median(words))
 
 homens = filmes_personagens %>%
   filter(gender == 'm') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_m=n(), words_m=sum(words))
+  summarise(n_m=n(), words_m=median(words))
+
+dados = merge(mulheres, homens, 
+                           by=c('script_id','imdb_id','title','year','gross'))
+duplicados = dados %>%
+  group_by(title) %>% filter(row_number() > 1)
+
+dados = dados %>% 
+  filter(!(title %in% duplicados$title))
+  
+dados = dados %>%
+  subset(select = -c(script_id,imdb_id,year,gross))
 ```
 
 ```{r}
-dados = merge(mulheres, homens, 
-                           by=c('script_id','imdb_id','title','year','gross'))
+dw = dados
 
-dados = dados %>%
-  subset(select = -c(imdb_id,year,gross))
+summary(dw)
 
-dw2 <- dados %>% 
-    mutate_each(funs(log), 3:6)
+dw %>% 
+    select(-title) %>% 
+    ggpairs()
+```
+
+```{r}
+# Escala de log 
+dw2 <- dw %>% 
+    mutate_each(funs(log), 2:5)
 
 dw2 %>% 
     select(-title) %>% 
@@ -60,7 +80,8 @@ dw2 %>%
 summary(select(dw2, -title))
 
 dw2.scaled = dw2 %>% 
-  mutate_each(funs(as.vector(scale(.))), 3:6)
+  mutate_each(funs(as.vector(scale(.))), 2:5)
+
 summary(dw2.scaled)
 
 dw2.scaled %>% 
@@ -68,9 +89,10 @@ dw2.scaled %>%
     ggpairs()
 ```
 ```{r}
-dists = dw2.scaled %>% 
-    column_to_rownames("script_id") %>% 
+dists = dw2.scaled %>%
+      column_to_rownames("title") %>% 
     dist(method = "euclidean")
+
 hc = hclust(dists, method = "ward.D")
 
 plot(hc, cex = .6)
@@ -109,27 +131,93 @@ p <- dw2 %>%
             dimensions = list(
                 #list(range = c(1, 4), label = "cluster", values = ~cluster),
                 list(range = c(0, 4),
-                     label = 'n gender f', values = ~n_f),
+                     label = 'n_f', values = ~n_f),
                 list(range = c(0, 4),
                      constraintrange = c(5,6),
-                     label = 'n words f', values = ~words_f),
+                     label = 'words_f', values = ~words_f),
                 list(range = c(0, 4),
-                     label = 'n gender m', values = ~n_m),
+                     label = 'n_m', values = ~n_m),
                 list(range = c(0, 4),
-                     label = 'n words m', values = ~words_m)
+                     label = 'words_m', values = ~words_m)
             )
     )
 p
 ```
 
+#k-means
+```{r}
+dw2.scaled = dw2.scaled %>% 
+    select(-cluster) # Remove o cluster adicionado antes lá em cima via hclust
 
-# Tipos de filme
+# O agrupamento de fato:
+km = dw2.scaled %>% 
+    select(-title) %>% 
+    kmeans(centers = n_clusters, nstart = 20)
 
-## A descriÃ§Ã£o
+# O df em formato longo, para visualização 
+dw2.scaled.km.long = km %>% 
+    augment(dw2.scaled) %>% # Adiciona o resultado de km 
+                            # aos dados originais dw2.scaled em 
+                            # uma variável chamada .cluster
+    gather(key = "variável", 
+           value = "valor", 
+           -title, -.cluster) # = move para long todas as 
+                                            # variávies menos repository_language 
+                                            # e .cluster
+dw2.scaled.km.long %>% 
+    ggplot(aes(x = `variável`, y = valor, group = title, colour = .cluster)) + 
+    #geom_point(alpha = 0.2) + 
+    geom_line(alpha = .5) + 
+    facet_wrap(~ .cluster) 
 
-# Agrupamento com duas dimensÃµes
-##Sem normalizaÃ§Ã£o e sem transformaÃ§Ã£o
+autoplot(km, data = dw2.scaled, label = TRUE)
 
-##Com normalizaÃ§Ã£o e com transformaÃ§Ã£o
+dists = dw2.scaled %>% 
+    select(-title) %>% 
+    dist() # só para plotar silhouetas depois
+plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
 
-# ConclusÃ£o
+#não funciona...
+#table(km %>% pull(cluster))
+#km %>% pull(cluster) %>% table()
+```
+
+```{r}
+#summary(dw2.scaled)
+p <- km %>% 
+    augment(dw2.scaled) %>%
+    plot_ly(type = 'parcoords',
+            line = list(color = ~.cluster, 
+                        showScale = TRUE),
+            dimensions = list(
+                #list(range = c(1, 4), label = "cluster", values = ~cluster),
+                list(range = c(-3, 3),
+                     label = 'n_f', values = ~n_f),
+                list(range = c(-3, 3),
+                     label = 'words_f', values = ~words_f),
+                list(range = c(-6, 3),
+                     label = 'n_m', values = ~n_m),
+                list(range = c(-2, 3),
+                     label = 'words_m', values = ~words_m)
+            )
+    )
+p
+```
+
+Qual seria um bom valor de k? Uma medida comumente usada no kmeans é comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre os pontos todos nos dados e o centro dos dados. Aqui o centro dos dados é um ponto imaginário na média de todas as variáveis. Calculamos a distância do centro de cada cluster para o centro dos dados e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos betweenss abaixo. Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (totss), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de k. Quando ela para de crescer, para de valer à pena aumentar k.
+
+```{r}
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>% 
+    group_by(k) %>% 
+    do(
+        kmeans(select(dw2.scaled, -title), 
+               centers = .$k, 
+               nstart = 20) %>% glance()
+    )
+
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point()
+```
