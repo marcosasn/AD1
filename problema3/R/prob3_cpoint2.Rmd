@@ -4,7 +4,6 @@ author: Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)
 date: "16 de junho de 2017"
 output: html_document
 ---
-
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -23,6 +22,8 @@ library(readr)
 
 theme_set(theme_bw())
 ```
+#Tipos de filme quanto ao gênero do personagem e da quantidade de palavras que eles falam
+Neste post vamos investigar a existência de tipos de filmes quanto ao gênero do personagem e da quantidade de palavras que ele fala. Esta investigação vai ajudar as pessoas a se confrontarem com o que se conhece popularmente a respeito de filmes voltados para o público feminino e os filmes do gênero de terror, por exemplo. Será que existem grupos que definem comportamentos comuns para os filmes analisados? Utilizaremos os dados cedidos pelo [Github](https://github.com/matthewfdaniels/scripts).
 
 ```{r}
 personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
@@ -57,7 +58,17 @@ dados = dados %>%
 dados = dados %>%
   subset(select = -c(script_id,imdb_id,year,gross))
 ```
+##Decisões sobre filtrar dados ou variáveis
+Observando os dados cedidos pelo repositório pude notar que o valor da variável idade, da tabela de personagens, não estava disponível ou continha valor nulo. Desta forma foi feita a filtragem dessas observações. A variável renda da tabela dos filmes tinha comportamento semelhente. Algumas observações continha valor não disponível então eu achei que seria prudente filtra-los uma vez que, filmes sem valor de renda não seriam relavantes na análise.
 
+Uma limitação encontrada durante a análise foi o fato de alguns filmes possuirem o mesmo nome embora fossem diferentes então para submeter os dados para a análise eu tive que fazer a filtragem desses filmes com nomes repetidos também. 
+
+##As dimensões submetidas a análise
+As dimensões submetidas a análise foram 4 variáveis numéricas calculadas a partir do conjunto de dados cedido pelo Github mencionado acima. São elas: nº de personagens do sexo feminino no filme, mediana de palavras dos personagens do sexo feminino no filme, nº de personagens do sexo masculino no filme, mediana de palavras dos personagens do sexo masculino no filme.
+
+O conjunto de dados submetido a análise contém, para cada filme, uma observação com valores para cada variável mencionada acima. A escolha das variáveis acima visava obter a resposta para a seguinte pergunta: visando o gênero do personagem e a quantidade de palavras ditas por ele em um filme, quais os tipos de filmes?
+
+##Sumário e descrição dos dados
 ```{r}
 dw = dados
 
@@ -95,11 +106,7 @@ dists = dw2.scaled %>%
 
 hc = hclust(dists, method = "ward.D")
 
-plot(hc, cex = .6)
-plot(hc, hang = -1)
-
 n_clusters = 4
-rect.hclust(hc, k=n_clusters)
 
 dw2 <- dw2 %>% 
     mutate(cluster = hc %>% 
@@ -112,39 +119,9 @@ dw2.scaled <- dw2.scaled %>%
                as.character())
 
 dw2.long = melt(dw2.scaled, id.vars = c("title", "cluster"))
-
-hc %>% 
-    cutree(k = n_clusters) %>% 
-    silhouette(dists) %>% 
-    plot(col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
-
-dw2.long %>% 
-    ggplot(aes(x = variable, y = value, group = title, colour = cluster)) + 
-    geom_line(alpha = 0.4) + 
-    facet_wrap(~ cluster) 
 ```
 
-```{r}
-p <- dw2 %>%
-    plot_ly(type = 'parcoords',
-            line = list(color = ~cluster),
-            dimensions = list(
-                #list(range = c(1, 4), label = "cluster", values = ~cluster),
-                list(range = c(0, 4),
-                     label = 'n_f', values = ~n_f),
-                list(range = c(0, 4),
-                     constraintrange = c(5,6),
-                     label = 'words_f', values = ~words_f),
-                list(range = c(0, 4),
-                     label = 'n_m', values = ~n_m),
-                list(range = c(0, 4),
-                     label = 'words_m', values = ~words_m)
-            )
-    )
-p
-```
-
-#k-means
+#O agrupamento multidimensional utilizado o algoritmo k-means
 ```{r}
 dw2.scaled = dw2.scaled %>% 
     select(-cluster) # Remove o cluster adicionado antes lá em cima via hclust
@@ -175,11 +152,7 @@ autoplot(km, data = dw2.scaled, label = TRUE)
 dists = dw2.scaled %>% 
     select(-title) %>% 
     dist() # só para plotar silhouetas depois
-plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
-
-#não funciona...
-#table(km %>% pull(cluster))
-#km %>% pull(cluster) %>% table()
+#plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
 ```
 
 ```{r}
@@ -221,3 +194,7 @@ explorando_k %>%
     geom_line() + 
     geom_point()
 ```
+
+#Conclusão
+
+[Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema3/R)
