@@ -110,6 +110,7 @@ dw2 %>%
           title = "Distribuição e correlação das dimensões")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 As conclusões sobre a figura acima são quase as mesmas para a figura da seção anterior mas a atenção se volta parar o gráfico de mediana de palavras das mulheres e a mediana de palavras dos homens. Na seção anterior percebemos que as mulheres falavam mais palavras do que os homens apesar de o número de mulheres ser duas vezes menor do que o número de homens, neste gráfico vemos que esta diferença é quase imperceptível. Isto fica ainda mais evidente no sumário de dados abaixo.
 
 ```{r}
@@ -184,6 +185,8 @@ explorando_k %>%
 
 ```
 
+Observando o gráfico acima fica fácil perceber que o melhor valor de k seria 4, já que, apartir de 4 betweenss começa a parar de crescer. O ponto k=4 é também conhecido como joelho da curva.
+
 ##Agrupando os dados utilizando k encontrado
 ```{r}
 # O agrupamento de fato:
@@ -199,21 +202,32 @@ dw2.scaled.km.long = km %>%
     gather(key = "variável", 
            value = "valor", 
            -title, -.cluster) # = move para long todas as 
-                                            # variávies menos repository_language 
+                                            # variávies menos title 
                                             # e .cluster
 dw2.scaled.km.long %>% 
     ggplot(aes(x = `variável`, y = valor, group = title, colour = .cluster)) + 
-    #geom_point(alpha = 0.2) + 
     geom_line(alpha = .5) + 
-    facet_wrap(~ .cluster) 
+    facet_wrap(~ .cluster) +
+    xlab("Variável") + 
+    ylab("Valor") +
+    ggtitle("Distribuição das dimensões por cluster") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-autoplot(km, data = dw2.scaled, label = TRUE)
+#autoplot(km, data = dw2.scaled, label = TRUE)
 
 dists = dw2.scaled %>% 
     select(-title) %>% 
     dist() # só para plotar silhouetas depois
 #plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
 ```
+
+Observando os agrupamentos acima podemos notar que: o grupo 1 é caracterizado por conter mais personagens do sexo feminino do que por personagens de sexo masculino embora ambos os sexos falem a mesma quantidade de palavras em termos de mediana.
+
+O grupo 2 é caracterizado por conter mais personagens do sexo feminino do que personagens do sexo masculino embora os personagens do sexo masculino falem mais do que os personagens do sexo feminino em termos de mediana.
+
+O grupo 3 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino. Neste grupo os homens falam mais quantidade de palavras do que as mulheres.
+
+O grupo 4 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino embora a quantidade de palavras ditas pelas mulheres seja maior do que a quantidade de palavras ditas por homens.
 
 ```{r}
 p <- km %>% 
@@ -224,16 +238,16 @@ p <- km %>%
             dimensions = list(
                 #list(range = c(1, 4), label = "cluster", values = ~cluster),
                 list(range = c(-3, 3),
-                     label = 'n_f', values = ~n_f),
+                     label = "Nº mulheres", values = ~n_f),
                 list(range = c(-3, 3),
-                     label = 'words_f', values = ~words_f),
+                     label = "Palavras mulheres", values = ~words_f),
                 list(range = c(-6, 3),
-                     label = 'n_m', values = ~n_m),
+                     label = "Nº homens", values = ~n_m),
                 list(range = c(-2, 3),
-                     label = 'words_m', values = ~words_m)
+                     label = "Palavras homens", values = ~words_m)
             )
     )
 p
 ```
 
-[Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema3/R)
+Copyright © 2017 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema3/R)
