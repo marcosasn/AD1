@@ -34,19 +34,21 @@ personagens = personagens %>%
 
 filmes = read.csv(file = "../dados/film-dialogue/meta_data7.csv")
 filmes = filmes %>%
-  filter(gross != 'NA')
+  filter(gross != 'NA', gross > 0)
 
 filmes_personagens = merge(filmes, personagens, by="script_id")
 
 mulheres = filmes_personagens %>%
   filter(gender == 'f') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_f=n(), words_f=median(words))
+  summarise(n_f=n(), words_f=median(words)) %>%
+  filter(n_f > 1)
 
 homens = filmes_personagens %>%
   filter(gender == 'm') %>%
   group_by(script_id, imdb_id, title, year, gross) %>%
-  summarise(n_m=n(), words_m=median(words))
+  summarise(n_m=n(), words_m=median(words)) %>%
+  filter(n_m > 1)
 
 dados = merge(mulheres, homens, 
                            by=c('script_id','imdb_id','title','year','gross'))
@@ -210,7 +212,7 @@ dw2.scaled.km.long %>%
     facet_wrap(~ .cluster) +
     xlab("Variável") + 
     ylab("Valor") +
-    ggtitle("Distribuição das dimensões por cluster") +
+    ggtitle("Gráfico de coordenadas paralelas") +
   theme(plot.title = element_text(hjust = 0.5))
 
 #autoplot(km, data = dw2.scaled, label = TRUE)
@@ -221,14 +223,20 @@ dists = dw2.scaled %>%
 #plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
 ```
 
-Observando os agrupamentos acima podemos notar que: o grupo 1 é caracterizado por conter mais personagens do sexo feminino do que por personagens de sexo masculino embora ambos os sexos falem a mesma quantidade de palavras em termos de mediana.
+Observando o gráfico acima e olhando a direção em que as linhas dos filmes cruzam e tocam cada uma das variáveis ou coordenadas podemos observar grupos que caracterizam os filmes que ali cabem.
 
-O grupo 2 é caracterizado por conter mais personagens do sexo feminino do que personagens do sexo masculino embora os personagens do sexo masculino falem mais do que os personagens do sexo feminino em termos de mediana.
+##Descrição e interpretação dos grupos
+Observando os agrupamentos do gráfico de coordenadas paralelas, podemos interpreta-los da seguinte forma: 
 
-O grupo 3 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino. Neste grupo os homens falam mais quantidade de palavras do que as mulheres.
+O grupo 1 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino embora a quantidade de palavras ditas pelas mulheres seja maior do que a quantidade de palavras ditas por homens. Estes filmes poderiam ser tratados como os tipicamente voltados para o público feminino. Um nome para este grupo seria **filmes femininos** e um exemplo seria: 
 
-O grupo 4 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino embora a quantidade de palavras ditas pelas mulheres seja maior do que a quantidade de palavras ditas por homens.
+O grupo 2 é caracterizado por conter mais personagens do sexo feminino do que personagens do sexo masculino embora os personagens do sexo masculino falem mais do que os personagens do sexo feminino. Estes filmes poderiam ser tratados como os tipicamente voltados para o público masculino. Um nome para este grupo seria **filmes masculinos** e um exemplo seria: 
 
+O grupo 3 é caracterizado por conter mais personagens do sexo feminino do que por personagens de sexo masculino embora ambos os sexos falem a mesma quantidade de palavras. Estes filmes poderiam ser tratados como os tipicamente voltados para o ambos os sexos. Um nome para este grupo seria **filmes feministas** e um exemplo seria: 
+
+O grupo 4 é caracterizado por conter mais personagens do sexo masculino do que personagens do sexo feminino. Neste grupo os homens falaram maiores quantidades de palavras do que as mulheres. Estes filmes poderiam ser tratados como os tipicamente voltados para ambos os sexo. Um nome para este grupo seria **filmes tipicamente masculinos** e um exemplo seria: 
+
+Por fim podemos observar como fica a disposição de todos os gráficos de coordenadas paralelas para todos os grupos um sobre o outro.
 ```{r}
 p <- km %>% 
     augment(dw2.scaled) %>%
