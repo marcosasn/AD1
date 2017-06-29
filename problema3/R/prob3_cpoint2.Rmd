@@ -85,10 +85,17 @@ dw %>%
           title = "Distribuição e correlação das dimensões")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+Na diagonal do gráfico acima podemos observar a distribuição de cada uma das dimensões submetidas a análise. De primeira já podemos observar um viesamento dos dados a esquerda. Isto impede ver melhor a magnitude dos valores porque os mesmo se concentram a esquerda do gráfico. De ante mão já podemos identificar que o número de homens nos filmes é ligeiramente maior que o número de mulheres. Isto fica ainda mais evidente no sumário dos dados abaixo, em termos de mediana, o número de homens nos filmes é duas vezes maior que o número de mulheres.
+
+Embora possa ser contraditório, a mediana de palavras ditas pelas mulheres é um pouco superior a mediana de palavras ditas pelos homens. Isto fica ainda mais evidente no sumário abaixo.
+
+Ainda sobre o gráfico a cima podemos observar que a medida que o número de mulheres ou homens presentes nos filmes aumenta eles tendem a falar menos em termos de mediana. No que diz respeito a correlação não podemos observar nenhuma correlação forte positiva ou negativa entre cada uma das dimensões analisadas.
 ```{r}
 summary(select(dw, -title))
 ```
 ###Dados em escala de log
+Como foi dito na seção anterior, é aconselhável observar a distruibuição de cada uma das dimensões na escala logarítmica para observar melhor a magnitude dos valores que se enviesam ou se concentram a esquerda do gráfico.
 ```{r}
 # Escala de log 
 dw2 <- dw %>% 
@@ -103,12 +110,14 @@ dw2 %>%
           title = "Distribuição e correlação das dimensões")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+As conclusões sobre a figura acima são quase as mesmas para a figura da seção anterior mas a atenção se volta parar o gráfico de mediana de palavras das mulheres e a mediana de palavras dos homens. Na seção anterior percebemos que as mulheres falavam mais palavras do que os homens apesar de o número de mulheres ser duas vezes menor do que o número de homens, neste gráfico vemos que esta diferença é quase imperceptível. Isto fica ainda mais evidente no sumário de dados abaixo.
+
 ```{r}
 summary(select(dw2, -title))
 ```
 
-
 ###Dados padronizados
+Depois de analisar os dados brutos e na escala logarítmica é chegada a hora de ver como se comporta a distribuição dos dados padronizados ou normalizados.
 ```{r}
 dw2.scaled = dw2 %>% 
   mutate_each(funs(as.vector(scale(.))), 2:5)
@@ -122,10 +131,19 @@ dw2.scaled %>%
           title = "Distribuição e correlação das dimensões")+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+O comportamento da distribuição de cada uma dimensão agora está em torno da média de cada dimensão. Como podemos observar nos gráficos acima e no sumário abaixo a média de cada dimensão é zero (própria da distribuição normal com média zero) e os demais valores são distanciamentos da média. Isto facilitará a análise dos gráficos de agrupamento nas seções posteriores.
+
+Uma vez normalizados ou padronizados, os dados podem ser utilizados no processo de agrupamento de forma igualitária ou justa (estaremos agrupando dados ou variáveis na mesma escala).
 ```{r}
 summary(select(dw2.scaled, -title))
 ```
 
+#O agrupamento multidimensional utilizado o algoritmo k-means
+##Escolhendo o valor de k
+Antes de realizar o agrupamento precisamos escolher um bom valor para k (basicamente indica o número de grupos ou tipos que iremos identificar no conjunto de dados). Uma medida comumente usada no k-means é comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre os pontos todos nos dados e o centro dos dados.
+
+Aqui o centro dos dados é um ponto imaginário na média de todas as variáveis. Calculamos a distância do centro de cada cluster para o centro dos dados e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos betweenss abaixo. Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (totss), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de k. Quando ela para de crescer, para de valer à pena aumentar k.
 ```{r}
 dists = dw2.scaled %>%
       column_to_rownames("title") %>% 
@@ -146,13 +164,28 @@ dw2.scaled <- dw2.scaled %>%
                as.character())
 
 dw2.long = melt(dw2.scaled, id.vars = c("title", "cluster"))
-```
 
-#O agrupamento multidimensional utilizado o algoritmo k-means
-```{r}
 dw2.scaled = dw2.scaled %>% 
     select(-cluster) # Remove o cluster adicionado antes lá em cima via hclust
 
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>% 
+    group_by(k) %>% 
+    do(
+        kmeans(select(dw2.scaled, -title), 
+               centers = .$k, 
+               nstart = 20) %>% glance()
+    )
+
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point()
+
+```
+
+##Agrupando os dados utilizando k encontrado
+```{r}
 # O agrupamento de fato:
 km = dw2.scaled %>% 
     select(-title) %>% 
@@ -183,7 +216,6 @@ dists = dw2.scaled %>%
 ```
 
 ```{r}
-#summary(dw2.scaled)
 p <- km %>% 
     augment(dw2.scaled) %>%
     plot_ly(type = 'parcoords',
@@ -203,25 +235,5 @@ p <- km %>%
     )
 p
 ```
-
-Qual seria um bom valor de k? Uma medida comumente usada no kmeans é comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre os pontos todos nos dados e o centro dos dados. Aqui o centro dos dados é um ponto imaginário na média de todas as variáveis. Calculamos a distância do centro de cada cluster para o centro dos dados e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos betweenss abaixo. Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (totss), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de k. Quando ela para de crescer, para de valer à pena aumentar k.
-
-```{r}
-set.seed(123)
-explorando_k = tibble(k = 1:15) %>% 
-    group_by(k) %>% 
-    do(
-        kmeans(select(dw2.scaled, -title), 
-               centers = .$k, 
-               nstart = 20) %>% glance()
-    )
-
-explorando_k %>% 
-    ggplot(aes(x = k, y = betweenss / totss)) + 
-    geom_line() + 
-    geom_point()
-```
-
-#Conclusão
 
 [Marcos Nascimento](http://https://github.com/marcosasn/AD1/tree/master/problema3/R)
