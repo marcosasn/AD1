@@ -19,6 +19,7 @@ library(ggdendro)
 library(broom)
 library(plotly)
 library(readr)
+library(magrittr)
 
 theme_set(theme_bw())
 ```
@@ -69,16 +70,25 @@ As dimensões submetidas a análise foram 4 variáveis numéricas calculadas a parti
 O conjunto de dados submetido a análise contém, para cada filme, uma observação com valores para cada variável mencionada acima. A escolha das variáveis acima visava obter a resposta para a seguinte pergunta: visando o gênero do personagem e a quantidade de palavras ditas por ele em um filme, quais os tipos de filmes?
 
 ##Sumário e descrição dos dados
+Vamos primeiramente olhar para o gráfico abaixo, veja como se comporta a distribuição de cada dimensão dos dados.
+
+###Dados brutos
 ```{r}
 dw = dados
 
-summary(dw)
-
 dw %>% 
-    select(-title) %>% 
-    ggpairs()
+  select(-title) %>% 
+  ggpairs(columnLabels = c("Nº mulheres",
+                           "Palavras mulheres",
+                           "Nº homens",
+                           "Palavras homens"),
+          title = "Distribuição e correlação das dimensões")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
-
+```{r}
+summary(select(dw, -title))
+```
+###Dados em escala de log
 ```{r}
 # Escala de log 
 dw2 <- dw %>% 
@@ -86,19 +96,36 @@ dw2 <- dw %>%
 
 dw2 %>% 
     select(-title) %>% 
-    ggpairs()
-
+    ggpairs(columnLabels = c("Nº mulheres",
+                           "Palavras mulheres",
+                           "Nº homens",
+                           "Palavras homens"),
+          title = "Distribuição e correlação das dimensões")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
 summary(select(dw2, -title))
+```
 
+
+###Dados padronizados
+```{r}
 dw2.scaled = dw2 %>% 
   mutate_each(funs(as.vector(scale(.))), 2:5)
 
-summary(dw2.scaled)
-
 dw2.scaled %>% 
     select(-title) %>% 
-    ggpairs()
+    ggpairs(columnLabels = c("Nº mulheres",
+                           "Palavras mulheres",
+                           "Nº homens",
+                           "Palavras homens"),
+          title = "Distribuição e correlação das dimensões")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
+```{r}
+summary(select(dw2.scaled, -title))
+```
+
 ```{r}
 dists = dw2.scaled %>%
       column_to_rownames("title") %>% 
