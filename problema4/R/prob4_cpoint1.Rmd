@@ -1,0 +1,56 @@
+---
+title: "prob4_cpoint1"
+author: "Marcos Nascimento"
+date: "July 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.align = "center")
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(readr)
+theme_set(theme_bw())
+```
+
+## Os dados
+
+Este problema trata com estimarmos a opinião que a audiência de um filme tem a partir dessa amostra. Considerando as avaliações da n-logia de resident evil, qual a expectativa de avaliação para um filme n+1? 
+```{r}
+movies = read_csv("../dados/movies.csv")
+ratings = read_csv("../dados/ratings.csv")
+
+movies = movies %>% 
+  filter(grepl("Resident Evil", title))
+
+dados = merge(movies, ratings) %>%
+  subset(select = -c(userId, timestamp))
+```
+
+##  Avaliando para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme.
+
+```{r}
+titles = dados %>% select(title) %>% unique()
+dados = dados %>% 
+  mutate(title = replace(title, which(title == "Resident Evil: Apocalypse (2004)"), "Apocalypse (2004)")) %>%
+  mutate(title = replace(title, which(title == "Resident Evil: Extinction (2007)"), "Extinction (2007)")) %>%
+  mutate(title = replace(title, which(title == "Resident Evil: Afterlife (2010)"), 
+                         "Afterlife (2010)")) %>%
+  mutate(title = replace(title, which(title == "Resident Evil: Retribution (2012)"), 
+                         "Retribution (2012)"))
+
+dados %>%
+    ggplot(aes(x = title, y = rating, color = title)) + 
+    geom_jitter(width = .1) +
+  theme(legend.position="none")
+
+dados %>%
+    ggplot(aes(x = title, y = rating, color = title)) + 
+    geom_jitter(width = .1) +
+  geom_boxplot() +
+  theme(legend.position="none")
+```
+
+## Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem?
