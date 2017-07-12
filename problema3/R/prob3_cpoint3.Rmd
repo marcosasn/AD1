@@ -1,0 +1,160 @@
+---
+title: "Problema 3 - Checkpoint 3"
+author: "Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)""
+date: "16 de junho de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_code}
+require(GGally, quietly = TRUE)
+require(reshape2, quietly = TRUE)
+require(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
+
+library(ggfortify)
+library(cluster)
+library(ggdendro)
+library(broom)
+library(plotly)
+library(readr)
+library(magrittr)
+
+theme_set(theme_bw())
+```
+# Tipos de filme quanto ao gênero do personagem e da quantidade de palavras que eles falam 
+
+Neste post vamos investigar a existência de tipos de filmes quanto ao gênero do personagem e da quantidade de palavras que ele fala. Esta investigação vai ajudar as pessoas a se confrontarem com o que se conhece popularmente a respeito de filmes voltados para o público feminino e os filmes do gênero de terror, por exemplo. Será que os filmes femininos o número de personagens é predominantemente feito de mulheres? Será que elas falam em maior quantidade que os homens? Será que existem grupos que definem comportamentos comuns para os filmes analisados? Utilizaremos os dados cedidos pelo Github. [Github](https://github.com/matthewfdaniels/scripts).
+
+```{r}
+personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
+personagens = personagens %>%
+  filter(age != 'NULL') %>% 
+  mutate(age = as.numeric(age))
+
+filmes = read.csv(file = "../dados/film-dialogue/meta_data7.csv")
+filmes = filmes %>%
+  filter(gross != 'NA', gross > 0)
+
+filmes_personagens = merge(filmes, personagens, by="script_id")
+
+mulheres = filmes_personagens %>%
+  filter(gender == 'f') %>%
+  group_by(script_id, imdb_id, title, year, gross) %>%
+  summarise(n_f=n(), words_f=median(words)) %>%
+  filter(n_f > 1)
+
+homens = filmes_personagens %>%
+  filter(gender == 'm') %>%
+  group_by(script_id, imdb_id, title, year, gross) %>%
+  summarise(n_m=n(), words_m=median(words)) %>%
+  filter(n_m > 1)
+
+dados = merge(mulheres, homens, 
+                           by=c('script_id','imdb_id','title','year','gross'))
+duplicados = dados %>%
+  group_by(title) %>% filter(row_number() > 1)
+
+dados = dados %>% 
+  filter(!(title %in% duplicados$title))
+  
+dados = dados %>%
+  subset(select = -c(script_id,imdb_id,year,gross))
+```
+## Decisões sobre filtrar dados ou variáveis 
+
+Observando os dados cedidos pelo repositório pude notar que o valor da variável idade, da tabela de personagens, não estava disponível ou continha valor nulo. Desta forma foi feita a filtragem dessas observações. A variável renda da tabela dos filmes tinha comportamento semelhente. Algumas observações continha valor não disponível ou então igual a zero, desta forma, eu achei que seria prudente filtra-los uma vez que, filmes sem valor de renda ou com valor de renda igual a zero não seriam relavantes na análise.
+
+Uma limitação encontrada durante a análise foi o fato de alguns filmes possuirem o mesmo nome embora fossem diferentes então para submeter os dados para a análise eu tive que fazer a filtragem desses filmes com nomes repetidos também.
+
+Esta análise só levará em consideração os filmes que contenham mais de um personagem de cada gênero.
+
+## As dimensões submetidas a análise 
+
+As dimensões submetidas a análise foram 4 variáveis numéricas calculadas a partir do conjunto de dados cedido pelo Github mencionado acima. São elas: **nº de personagens do sexo feminino no filme**, **mediana de palavras dos personagens do sexo feminino no filme**, **nº de personagens do sexo masculino no filme** e **mediana de palavras dos personagens do sexo masculino no filme**.
+
+O conjunto de dados submetido a análise contém, para cada filme, uma observação com valores para cada variável mencionada acima. A escolha das variáveis acima visava obter a resposta para a seguinte pergunta: visando o gênero do personagem e a quantidade de palavras ditas por ele em um filme, quais os tipos de filmes? Filmes em que as mulheres são protagonistas? Filmes em que os homens são protagonistas?
+
+## Agrupamento usando PCA(Análise de Componentes Principais)
+Agrupamento em uma visualização 2D
+```{r}
+dw = dados
+# Escala de log 
+dw2 <- dw %>% 
+    mutate_each(funs(log), 2:5)
+dw2.scaled = dw2 %>% 
+  mutate_each(funs(as.vector(scale(.))), 2:5)
+
+dists = dw2.scaled %>%
+      column_to_rownames("title") %>% 
+    dist(method = "euclidean")
+
+hc = hclust(dists, method = "ward.D")
+
+n_clusters = 4
+
+dw2 <- dw2 %>% 
+    mutate(cluster = hc %>% 
+               cutree(k = n_clusters) %>% 
+               as.character())
+
+dw2.scaled <- dw2.scaled %>% 
+    mutate(cluster = hc %>% 
+               cutree(k = n_clusters) %>% 
+               as.character())
+
+dw2.long = melt(dw2.scaled, id.vars = c("title", "cluster"))
+
+dw2.scaled = dw2.scaled %>% 
+    select(-cluster) # Remove o cluster adicionado antes l? em cima via hclust
+
+set.seed(123)
+explorando_k = tibble(k = 1:15) %>% 
+    group_by(k) %>% 
+    do(
+        kmeans(select(dw2.scaled, -title), 
+               centers = .$k, 
+               nstart = 20) %>% glance()
+    )
+
+explorando_k %>% 
+    ggplot(aes(x = k, y = betweenss / totss)) + 
+    geom_line() + 
+    geom_point()
+
+# O agrupamento de fato:
+km = dw2.scaled %>% 
+    select(-title) %>% 
+    kmeans(centers = n_clusters, nstart = 20)
+
+# O df em formato longo, para visualiza??o 
+dw2.scaled.km.long = km %>% 
+    augment(dw2.scaled) %>% # Adiciona o resultado de km 
+                            # aos dados originais dw2.scaled em 
+                            # uma vari?vel chamada .cluster
+    gather(key = "variável", 
+           value = "valor", 
+           -title, -.cluster) # = move para long todas as 
+                                            # vari?vies menos title 
+                                            # e .cluster
+dw2.scaled.km.long %>% 
+    ggplot(aes(x = `variável`, y = valor, group = title, colour = .cluster)) + 
+    geom_line(alpha = .5) + 
+    facet_wrap(~ .cluster) +
+    xlab("Variável") + 
+    ylab("Valor") +
+    ggtitle("Gráfico de coordenadas paralelas") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+autoplot(km, data = dw2.scaled, label = TRUE)
+
+dists = dw2.scaled %>% 
+    select(-title) %>% 
+    dist()
+
+plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
+
+```
+
