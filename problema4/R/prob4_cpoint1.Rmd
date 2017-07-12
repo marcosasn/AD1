@@ -32,13 +32,18 @@ dados = merge(movies, ratings) %>%
 ##  Avaliando para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme.
 
 ```{r}
-titles = dados %>% select(title) %>% unique()
 dados = dados %>% 
-  mutate(title = replace(title, which(title == "Resident Evil: Apocalypse (2004)"), "Apocalypse (2004)")) %>%
-  mutate(title = replace(title, which(title == "Resident Evil: Extinction (2007)"), "Extinction (2007)")) %>%
-  mutate(title = replace(title, which(title == "Resident Evil: Afterlife (2010)"), 
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Apocalypse (2004)"),
+                         "Apocalypse (2004)")) %>%
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Extinction (2007)"),
+                         "Extinction (2007)")) %>%
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Afterlife (2010)"), 
                          "Afterlife (2010)")) %>%
-  mutate(title = replace(title, which(title == "Resident Evil: Retribution (2012)"), 
+  mutate(title = replace(title, 
+                         which(title == "Resident Evil: Retribution (2012)"), 
                          "Retribution (2012)"))
 
 dados %>%
@@ -54,3 +59,19 @@ dados %>%
 ```
 
 ## Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem?
+```{r}
+dados2 = dados %>%
+  filter(title %in% c("Resident Evil (2002)",
+                      "Apocalypse (2004)",
+                      "Extinction (2007)",
+                      "Retribution (2012)")) %>%
+  mutate(genresQtd = 4)
+
+dados3 = dados %>%
+  filter(title == "Afterlife (2010)") %>%
+  mutate(genresQtd = 5)
+
+dados = rbind(dados2, dados3)
+
+```
+
