@@ -1,6 +1,6 @@
 ---
 title: "Problema 3 - Checkpoint 3"
-author: "Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)""
+author: "Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)"
 date: "16 de junho de 2017"
 output: html_document
 ---
@@ -77,8 +77,6 @@ As dimensões submetidas a análise foram 4 variáveis numéricas calculadas a p
 
 O conjunto de dados submetido a análise contém, para cada filme, uma observação com valores para cada variável mencionada acima. A escolha das variáveis acima visava obter a resposta para a seguinte pergunta: visando o gênero do personagem e a quantidade de palavras ditas por ele em um filme, quais os tipos de filmes? Filmes em que as mulheres são protagonistas? Filmes em que os homens são protagonistas?
 
-## Agrupamento usando PCA(Análise de Componentes Principais)
-Agrupamento em uma visualização 2D
 ```{r}
 dw = dados
 # Escala de log 
@@ -118,12 +116,23 @@ explorando_k = tibble(k = 1:15) %>%
                centers = .$k, 
                nstart = 20) %>% glance()
     )
+```
+## Escolhendo o valor de k
 
+Antes de realizar o agrupamento precisamos escolher um bom valor para k (basicamente indica o número de grupos ou tipos que iremos identificar no conjunto de dados). Uma medida comumente usada no k-means é comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre todos os pontos nos dados e o centro dos dados.
+
+Aqui o centro dos dados é um ponto imaginário na média de todas as variáveis. Calculamos a distância do centro de cada cluster para o centro dos dados e multiplicamos pelo número de pontos nesse cluster. Somando esse valor para todos os clusters, temos betweenss abaixo. Se esse valor for próximo do somatório total das distâncias dos pontos para o centro dos dados (totss), os pontos estão próximos do centro de seu cluster. Essa proporção pode ser usada para definir um bom valor de k. Quando ela para de crescer, para de valer à pena aumentar k.
+```{r}
 explorando_k %>% 
     ggplot(aes(x = k, y = betweenss / totss)) + 
     geom_line() + 
     geom_point()
+```
 
+Observando o gráfico acima fica fácil perceber que o melhor valor de k seria 4, já que, apartir de 4 betweenss começa a parar de crescer. O ponto k=4 é também conhecido como joelho da curva.
+
+## Agrupando os dados
+```{r}
 # O agrupamento de fato:
 km = dw2.scaled %>% 
     select(-title) %>% 
@@ -147,14 +156,39 @@ dw2.scaled.km.long %>%
     ylab("Valor") +
     ggtitle("Gráfico de coordenadas paralelas") +
   theme(plot.title = element_text(hjust = 0.5))
-
-autoplot(km, data = dw2.scaled, label = TRUE)
-
-dists = dw2.scaled %>% 
-    select(-title) %>% 
-    dist()
-
-plot(silhouette(km$cluster, dists), col = RColorBrewer::brewer.pal(n_clusters, "Set2"))
-
 ```
 
+Observando o gráfico acima e olhando a direção em que as linhas dos filmes cruzam e tocam cada uma das variáveis ou coordenadas podemos observar grupos que caracterizam os filmes que ali cabem.
+
+## Redução de dimensionalidade usando PCA (Análise de Componentes Principais)
+
+Logo abaixo podemos ver a visualização 2D da redução de dimensionalidade das 4 dimensões mencionadas anteriormente.
+```{r}
+ggplotly(autoplot(km, data = dw2.scaled, label = TRUE))
+```
+
+### Descrição e interpretação da redução
+
+Outra forma de ver a informação que o gráfico mostra é vendo PC1 e PC2 como duas funções das 4 variáveis originais, vejamos abaixo.
+```{r}
+pr.out <- prcomp(select(dw, -title), scale=TRUE)
+tidy(pr.out, "variables") %>% 
+    filter(PC <= 2) %>% 
+    spread(column, value)
+```
+
+Os valores na tabela são os coeficientes, e a leitura é que:
+
+PC1 = 0.34n_f + 0.50n_m - 0.52words_f − 0.60words_m e PC2 = 0.73n_f - 0.51n_m - 0.35words_f + 0.28words_m
+
+Em PC1, mudar uma unidade nas 2 primeiras variáveis aumenta PC1 e faz com que um ponto esteja mais à direita no gráfico. Já words_f e words_m têm efeito negativo e de maior efeito por unidade do que as duas primeiras. A unidade aqui é em z-scores: todas as variáveis foram normalizadas com scale antes da redução de dimensionalidade, para que seu efeito ficasse comparável.
+
+Em PC2, mudar uma unidade na primeira e última variável aumenta PC2 e faz com que um ponto esteja mais à cima no gráfico. Já n_m e words_f têm um efeito negativo e de menor efeito por unidade.
+
+### Interpretação da visualização
+
+```{r}
+ggplotly(autoplot(km, data = dw2.scaled, label = TRUE))
+```
+
+Podemos entender que existem 4 grupos de filmes segundo as 4 variáveis que usamos. No grupo mais à esquerda no gráfico, estão espécies que tem valores no geral parecidos – e baixos – de Petal.Width, Petal.Length e Sepal.Length, mas que variam muito nos valores de Sepal.Width que tem. Existe um ponto mais em cima e à esquerda que é estranho nesse grupo também.
