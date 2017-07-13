@@ -26,7 +26,7 @@ theme_set(theme_bw())
 ```
 # Tipos de filme quanto ao gênero do personagem e da quantidade de palavras que eles falam 
 
-Neste post vamos investigar a existência de tipos de filmes quanto ao gênero do personagem e da quantidade de palavras que ele fala. Esta investigação vai ajudar as pessoas a se confrontarem com o que se conhece popularmente a respeito de filmes voltados para o público feminino e os filmes do gênero de terror, por exemplo. Será que os filmes femininos o número de personagens é predominantemente feito de mulheres? Será que elas falam em maior quantidade que os homens? Será que existem grupos que definem comportamentos comuns para os filmes analisados? Utilizaremos os dados cedidos pelo Github. [Github](https://github.com/matthewfdaniels/scripts).
+Neste post vamos investigar a existência de tipos de filmes quanto ao gênero do personagem e da quantidade de palavras que ele fala. Esta investigação vai ajudar as pessoas a se confrontarem com o que se conhece popularmente a respeito de filmes voltados para o público feminino e os filmes do gênero de terror, por exemplo. Será que os filmes femininos o número de personagens é predominantemente feito de mulheres? Será que elas falam em maior quantidade que os homens? Será que existem grupos que definem comportamentos comuns para os filmes analisados? Utilizaremos os dados cedidos pelo [Github](https://github.com/matthewfdaniels/scripts).
 
 ```{r}
 personagens = read_csv(file = "../dados/film-dialogue/character_list5.csv")
@@ -117,6 +117,8 @@ explorando_k = tibble(k = 1:15) %>%
                nstart = 20) %>% glance()
     )
 ```
+# O agrupamento multidimensional utilizado o algoritmo k-means
+
 ## Escolhendo o valor de k
 
 Antes de realizar o agrupamento precisamos escolher um bom valor para k (basicamente indica o número de grupos ou tipos que iremos identificar no conjunto de dados). Uma medida comumente usada no k-means é comparar a distância (quadrática) entre o centro dos clusters e o centro dos dados com a distância (quadrática) entre todos os pontos nos dados e o centro dos dados.
@@ -129,7 +131,7 @@ explorando_k %>%
     geom_point()
 ```
 
-Observando o gráfico acima fica fácil perceber que o melhor valor de k seria 4, já que, apartir de 4 betweenss começa a parar de crescer. O ponto k=4 é também conhecido como joelho da curva.
+Observando o gráfico acima fica fácil perceber que o melhor valor de k seria 4, já que a partir de k=4, betweenss começa a parar de crescer. O ponto k=4 é também conhecido como joelho da curva.
 
 ## Agrupando os dados
 ```{r}
@@ -160,25 +162,24 @@ dw2.scaled.km.long %>%
 
 Observando o gráfico acima e olhando a direção em que as linhas dos filmes cruzam e tocam cada uma das variáveis ou coordenadas podemos observar grupos que caracterizam os filmes que ali cabem.
 
-## Redução de dimensionalidade usando PCA (Análise de Componentes Principais)
+# Redução de dimensionalidade usando PCA (Análise de Componentes Principais)
 
 Logo abaixo podemos ver a visualização 2D da redução de dimensionalidade das 4 dimensões mencionadas anteriormente.
 ```{r}
-ggplotly(autoplot(km, data = dw2.scaled, label = TRUE))
+autoplot(km, data = dw2.scaled, label = TRUE) %>%
+  ggplotly()
 ```
 
-### Descrição e interpretação da redução
+## Descrição e interpretação da redução
 
 PC1 e PC2 são as duas variáveis criadas para substituir as 4 variáveis originais de antes da visualização. PC1 e PC2 são úteis se conseguirmos entender a relação delas com as variáveis originais. Na técnica denominada PCA, cada uma dessas novas variáveis é calculada a partir das 4 iniciais.
 
 ```{r}
-pr.out <- prcomp(select(dw, -title), scale=TRUE)
-
-autoplot(pr.out, data = dw, size = 2, 
+autoplot(km, data = dw2.scaled, size = 2, 
          colour = "grey",
          loadings = TRUE, loadings.colour = 'blue',
          loadings.label = TRUE, 
-         loadings.label.size = 3)
+         loadings.label.size = 3) %>% ggplotly()
 ```
 
 Observando o gráfico, words_m e words_f variam quando um ponto está mais à esquerda ou direita no gráfico (direção de PC1), mas não variam muito em função da posição de um ponto no eixo vertical (direção de PC2). Já n_f e n_m estão mais relacionada com PC2, enquanto words_m e words_f praticamente não estão. 
@@ -187,24 +188,26 @@ Seguindo a mesma leitura, n_f e n_m variam principalmente na medida que os ponto
 
 Outra forma de ver a informação que o gráfico mostra é vendo PC1 e PC2 como duas funções das 4 variáveis originais, vejamos abaixo.
 ```{r}
-tidy(pr.out, "variables") %>% 
-    filter(PC <= 2) %>% 
-    spread(column, value)
+pr.out <- prcomp(select(dw2.scaled, -title), scale=TRUE)
+
+tidy(pr.out,"variables") %>% 
+  filter(PC <= 2) %>% 
+  spread(column, value)
 ```
 
 Os valores na tabela são os coeficientes, e a leitura é que:
 
-*PC1 = 0.34n_f + 0.50n_m - 0.52words_f − 0.60words_m* e *PC2 = 0.73n_f - 0.51n_m - 0.35words_f + 0.28words_m*.
+*PC1 = 0.34n_f + 0.51n_m - 0.51words_f − 0.60words_m* e *PC2 = 0.69n_f - 0.50n_m - 0.41words_f + 0.31words_m*.
 
 Em PC1, mudar uma unidade nas 2 primeiras variáveis aumenta PC1 e faz com que um ponto esteja mais à direita no gráfico. Já words_f e words_m têm efeito negativo e de maior efeito por unidade do que as duas primeiras. A unidade aqui é em z-scores: todas as variáveis foram normalizadas com scale antes da redução de dimensionalidade, para que seu efeito ficasse comparável.
 
 Em PC2, mudar uma unidade nas 2 primeiras variáveis aumenta PC2 e faz com que um ponto esteja mais à cima ou abaixo no gráfico.
 
-#### Correlação entre as variáveis e os PCs
+## Correlação entre as variáveis e os PCs
 
-Podemos perceber que as variáveis são pouco correlacionadas. De certa maneira, isso não significa que elas não tenham informação parecida. As variáveis words_m e words_f são pouco correlacionadas mas as duas são componentes principais para trazer informação para PC1, por isso, PC1 é uma função dessas 2 variáveis. Como n_m e n_f não trazem muita informação para PC1 o método PCA cria PC2 que vai ser representado pelas outras duas variáveis, n_f e n_m, menos correlacionadas com as demais. Da mesma forma, n_f e n_m são pouco correlacionadas mas a união delas trás muita informação para PC2.
+Podemos perceber que as variáveis são pouco correlacionadas. De certa maneira, isso não significa que elas não tenham informação parecida. As variáveis words_m e words_f são pouco correlacionadas mas as duas são componentes principais para trazer informação para PC1, por isso, PC1 é uma função dessas 2 variáveis. Como n_m e n_f não trazem muita informação para PC1, o método PCA cria PC2 que vai ser representado por estas duas variáveis que são menos correlacionadas com as demais. Da mesma forma, n_f e n_m são pouco correlacionadas mas a união delas trás muita informação para PC2.
 
-### Interpretação dos grupos presentes na visualização
+## Interpretação dos grupos presentes na visualização
 
 Podemos entender que existem 4 grupos de filmes segundo as 4 variáveis que usamos. 
 
