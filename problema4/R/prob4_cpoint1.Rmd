@@ -12,6 +12,7 @@ library(ggplot2)
 library(GGally)
 library(dplyr)
 library(readr)
+library(resample)
 theme_set(theme_bw())
 ```
 
@@ -21,11 +22,14 @@ Este problema trata com estimarmos a opinião que a audiência de um filme tem a
 ```{r}
 movies = read_csv("../dados/movies.csv")
 ratings = read_csv("../dados/ratings.csv")
+genres = read_csv("../dados/movie-genre.csv")
+genres = genres %>% 
+  filter(grepl("Resident Evil", title))
 
 movies = movies %>% 
   filter(grepl("Resident Evil", title))
 
-dados = merge(movies, ratings) %>%
+dados = merge(movies, ratings, by="movieId") %>%
   subset(select = -c(userId, timestamp))
 ```
 
@@ -43,8 +47,7 @@ dados = dados %>%
                          which(title == "Resident Evil: Afterlife (2010)"), 
                          "Afterlife (2010)")) %>%
   mutate(title = replace(title, 
-                         which(title == "Resident Evil: Retribution (2012)"), 
-                         "Retribution (2012)"))
+                         which(title == "Resident Evil: Retribution (2012)"),                          "Retribution (2012)"))
 
 dados %>%
     ggplot(aes(x = title, y = rating, color = title)) + 
@@ -56,22 +59,70 @@ dados %>%
     geom_jitter(width = .1) +
   geom_boxplot() +
   theme(legend.position="none")
+
+dados %>%
+  ggplot(aes(rating)) + 
+  geom_bar()+ 
+  facet_grid(. ~ title)
 ```
+
+```{r}
+bootstrap.mediana.extinction =  bootstrap(
+  (dados %>% filter(title == "Extinction (2007)"))$rating, median, R = 1000)
+
+mediana.resident.extinction = CI.percentile(bootstrap.mediana.extinction,
+                                      probs = c(.025, .975))
+
+
+bootstrap.mediana.apocalypse =  bootstrap(
+  (dados %>% filter(title == "Apocalypse (2004)"))$rating, median, R = 1000)
+
+mediana.resident.apocalypse = CI.percentile(bootstrap.mediana.apocalypse,
+                                      probs = c(.025, .975))
+
+bootstrap.mediana.afterlife =  bootstrap(
+  (dados %>% filter(title == "Afterlife (2010)"))$rating, median, R = 1000)
+
+mediana.resident.afterlife = CI.percentile(bootstrap.mediana.afterlife,
+                                      probs = c(.025, .975))
+
+bootstrap.mediana.resident.evil =  bootstrap(
+  (dados %>% filter(title == "Resident Evil (2002)"))$rating, median, R = 1000)
+
+mediana.resident.evil = CI.percentile(bootstrap.mediana.resident.evil,
+                                      probs = c(.025, .975))
+
+medianas <- data.frame(
+  rbind(
+    c("Resident Evil (2002)", mediana.resident.evil),
+    c("Afterlife (2010)", mediana.resident.afterlife),
+    c("Apocalypse (2004)", mediana.resident.apocalypse),
+    c("Extinction (2007)", mediana.resident.extinction)
+  )
+)
+names(medianas) = c("title", "inferiorLimit", "upperLimit")
+
+medianas %>% 
+  ggplot( aes(x = title,
+              ymin = inferiorLimit,
+              ymax = upperLimit,
+              color = title)) +
+  geom_errorbar(width = .2) +
+  ggtitle("Intervalo de confiança da estimativa Mediana das avaliações dos filmes") +
+  theme(legend.position="none")
+
+```
+
+
 
 ## Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem?
 ```{r}
-dados2 = dados %>%
-  filter(title %in% c("Resident Evil (2002)",
-                      "Apocalypse (2004)",
-                      "Extinction (2007)",
-                      "Retribution (2012)")) %>%
-  mutate(genresQtd = 4)
+genres = genres %>%
+  group_by(movieId, title) %>%
+  summarise(nGenre = n())
 
-dados3 = dados %>%
-  filter(title == "Afterlife (2010)") %>%
-  mutate(genresQtd = 5)
-
-dados = rbind(dados2, dados3)
-
+dados = merge(dados, genres, by=c("movieId","title"))
+dados = dados %>%
+  subset(select = -c(genres))
 ```
 
