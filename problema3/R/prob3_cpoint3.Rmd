@@ -172,7 +172,23 @@ autoplot(km, data = dw2.scaled, label = TRUE) %>%
 
 ## Descrição e interpretação da redução
 
-PC1 e PC2 são as duas variáveis criadas para substituir as 4 variáveis originais de antes da visualização. PC1 e PC2 são úteis se conseguirmos entender a relação delas com as variáveis originais. Na técnica denominada PCA, cada uma dessas novas variáveis é calculada a partir das 4 iniciais.
+PC1 e PC2 são as duas variáveis criadas para substituir as 4 variáveis originais de antes da visualização. Antes de descrever o que PC1 e PC2 significam é importante observar quanto de informação original é mostrado no gráfico de redução mostrado anteriormente.
+
+```{r}
+filmes_pca = dw2.scaled %>% 
+    column_to_rownames("title") %>% 
+    prcomp(scale = FALSE)
+
+tidy(filmes_pca, "pcs") %>% 
+    ggplot(aes(x = PC, y = cumulative, label = cumulative)) + 
+    geom_line() + 
+    geom_point() + 
+    geom_text(vjust = 1, hjust = -.1)
+```
+
+Podemos observar no gráfico acima que a redução de dimensionalidade 2D, neste caso, ainda consegue representar 67% da informação original dos dados.
+
+PC1 e PC2 são úteis se conseguirmos entender a relação delas com as variáveis originais. Na técnica denominada PCA, cada uma dessas novas variáveis é calculada a partir das 4 iniciais.
 
 ```{r}
 autoplot(km, data = dw2.scaled, size = 2, 
@@ -201,31 +217,11 @@ Os valores na tabela são os coeficientes, e a leitura é que:
 
 Em PC1, mudar uma unidade nas 2 primeiras variáveis aumenta PC1 e faz com que um ponto esteja mais à direita no gráfico. Já words_f e words_m têm efeito negativo e de maior efeito por unidade do que as duas primeiras. A unidade aqui é em z-scores: todas as variáveis foram normalizadas com scale antes da redução de dimensionalidade, para que seu efeito ficasse comparável.
 
-Em PC2, mudar uma unidade nas 2 primeiras variáveis aumenta PC2 e faz com que um ponto esteja mais à cima ou abaixo no gráfico.
+Em PC2, mudar uma unidade na primeira e última variável aumenta PC2 e faz com que um ponto esteja mais à cima no gráfico. Já n_m e words_f têm efeito negativo. As duas variáveis com maior efeito sobre PC2 são n_f e n_m.
 
 ## Correlação entre as variáveis e os PCs
 
-```{r}
-filmes_pca = dw2.scaled %>% 
-    column_to_rownames("title") %>% 
-    prcomp(scale = FALSE)
-
-print(as.data.frame(filmes_pca$rotation))
-
-tidy(filmes_pca, "variables")
-
-tidy(filmes_pca, "pcs")
-
-tidy(filmes_pca, "pcs") %>% 
-    ggplot(aes(x = PC, y = cumulative, label = cumulative)) + 
-    geom_line() + 
-    geom_point() + 
-    geom_text(vjust = 1, hjust = -.1)
-```
-
-AQUI!
-
-Podemos perceber que as variáveis são pouco correlacionadas. De certa maneira, isso não significa que elas não tenham informação parecida. As variáveis words_m e words_f são pouco correlacionadas mas as duas são componentes principais para trazer informação para PC1, por isso, PC1 é uma função dessas 2 variáveis. Como n_m e n_f não trazem muita informação para PC1, o método PCA cria PC2 que vai ser representado por estas duas variáveis que são menos correlacionadas com as demais. Da mesma forma, n_f e n_m são pouco correlacionadas mas a união delas trás muita informação para PC2.
+Podemos perceber que as variáveis são pouco correlacionadas. De certa maneira, isso não significa que elas não tenham informação parecida. As variáveis words_m e words_f são pouco correlacionadas mas as duas são componentes principais para trazer informação para PC1, por isso, PC1 é uma função dessas 2 variáveis. Como n_m e n_f não trazem muita informação para PC1, o método PCA cria PC2 que vai ser representado por estas duas variáveis que são menos correlacionadas com as demais. Da mesma forma, n_f e n_m são pouco correlacionadas mas a união delas trás muita informação pra PC2.
 
 ## Interpretação dos grupos presentes na visualização
 
@@ -235,12 +231,12 @@ Podemos entender que existem 4 grupos de filmes segundo as 4 variáveis que usam
 ggplotly(autoplot(km, data = dw2.scaled, label = TRUE))
 ```
 
-No grupo 1 (nuvem vermelha) estão os filmes que tem valores no geral parecidos - baixos - de n_f e words_f e - altos - de n_m, mas que variam muito nos valores de words_m e words_f. Em outras palavras os filmes que possuem muitos homens, poucas mulheres e que as mulheres falam em menor quantidade, em análise anterior esse grupo recebeu o nome de **filmes femininos tradicionais**.
+No grupo 1 (nuvem vermelha) estão os filmes que tem valores no geral parecidos - baixos - de n_f e words_f e - altos - de n_m. Em outras palavras os filmes que possuem muitos homens, poucas mulheres e que as mulheres falam em menor quantidade, em análise anterior esse grupo recebeu o nome de **filmes femininos tradicionais**.
 
 No grupo 2 (a nuvem verde) estão os filmes que tem valores no geral parecidos – e altos – de n_f e words_m mas que variam muito nos valores de words_m e words_f que tem. Em outras palavras os filmes que possuem muitas mulheres mas que elas falam menos do que os homens, segundo análise anterior esse grupo recebeu o nome de **filmes masculinos tradicionais**.
 
-No grupo 3 (a nuvem azul) estão os filmes que tem valores no geral bem parecidos com os valores dos filmes do grupo 4. Possui valores - altos - de n_f mas que possuem valores variados de words_f e words_m. Em outras palavras são os filmes em que tanto homens quanto mulheres falam variadamente mas a maior parte dos personagens são mulheres, em outra análise esse grupo recebeu o nome de **filmes feministas modernos**.
+No grupo 3 (a nuvem azul) estão os filmes que tem valores no geral bem parecidos com os valores dos filmes do grupo 4. Possui valores - altos - de n_f mas que possuem valores variados e baixos de words_f e words_m. Em outras palavras são os filmes em que tanto homens quanto mulheres falam variadamente e pouco mas a maior parte dos personagens são do sexo feminino, em outra análise esse grupo recebeu o nome de **filmes feministas modernos**.
 
-No grupo 4 (a nuvem lilás) estão os filmes que tem valores bem parecidos no geral. Possui valores - altos - de n_m e - baixos - de n_f mas posuem valores bem parecidos de words_m e words_f. Em outras palavras são os filmes em que ambos os sexos falam praticamente a mesma quantidade de palavras embora a maior parte dos personagens sejam do sexo masculino, em outra análise esse grupo recebeu o nome de **filmes machistas tradicionais**.
+No grupo 4 (a nuvem lilás) estão os filmes que tem valores bem parecidos no geral. Possui valores - altos - de n_m e - baixos - de n_f, mas posuem valores bem parecidos de words_m e words_f. Em outras palavras são os filmes em que ambos os sexos falam praticamente a mesma quantidade de palavras embora a maior parte dos personagens sejam do sexo masculino, em outra análise esse grupo recebeu o nome de **filmes machistas tradicionais**.
 
 Copyright © 2017 [Marcos Nascimento](https://github.com/marcosasn/AD1/blob/master/problema3/R/prob3_cpoint3.Rmd)
