@@ -33,7 +33,6 @@ movies = movies %>%
 dados = merge(movies, ratings, by="movieId")
 
 genres = genres %>%
-  filter(grepl("Resident Evil", title)) %>%
   group_by(movieId, title) %>%
   summarise(nGenre = n())
 
@@ -118,5 +117,17 @@ b =  bootstrap((dados2 %>%
 m = CI.percentile(b, probs = c(.025, .975))
 m
 
+```
+
+## Quais os gêneros de filmes mais bem avaliados?
+
+```{r}
+
+```
+
+
+## Os filmes com maior quantidade de gênero são mais bem avaliados?
+
+```{r}
 ```
 
