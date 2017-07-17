@@ -1,0 +1,122 @@
+---
+title: "Problema 4 - Checkpoint 2"
+author: "Marcos Antonio Silva Nascimento (marcos.nascimento@ccc.ufcg.edu.br)"
+date: "17 de julho de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.align = "center")
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(readr)
+library(resample)
+theme_set(theme_bw())
+```
+
+Responda 3 novas perguntas criadas por você e combinadas com o professor sobre os dados usados na Parte 1 envolvendo inferência estatística e utilizando bootstrap.
+
+# Avaliando a audiência dos filmes de Resident Evil 
+
+O suscesso dos filmes de Resident Evil já não é mais nenhuma novidade. Isso fica cada vez mais evidente pelo simples motivo de observar o empenho e a motivação dos diretores em inovarem e lançarem novos filmes desde o seu aparecimento no mundo dos jogos. Vamos estimar, a partir de uma amostra de opiniões do filme, os intervalos de valores que delineam a avaliação de cada filme. Utilizaremos os dados cedidos pelo site [GroupLens](http://grouplens.org/datasets/movielens/latest/).
+
+```{r}
+movies = read_csv("../dados/movies.csv")
+ratings = read_csv("../dados/ratings.csv")
+genres = read_csv("../dados/movie-genre.csv")
+
+movies = movies %>% 
+  filter(grepl("Resident Evil", title))
+
+dados = merge(movies, ratings, by="movieId")
+
+genres = genres %>%
+  filter(grepl("Resident Evil", title)) %>%
+  group_by(movieId, title) %>%
+  summarise(nGenre = n())
+
+dados = merge(dados, genres, by=c("movieId","title")) %>%
+  subset(select = -c(userId, timestamp, genres))
+
+dados = dados %>% 
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Apocalypse (2004)"),
+                         "Apocalypse (2004)")) %>%
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Extinction (2007)"),
+                         "Extinction (2007)")) %>%
+  mutate(title = replace(title,
+                         which(title == "Resident Evil: Afterlife (2010)"), 
+                         "Afterlife (2010)")) %>%
+  mutate(title = replace(title, 
+                         which(title == "Resident Evil: Retribution (2012)"),                          "Retribution (2012)"))
+
+```
+
+## Decisões sobre filtrar dados ou variáveis 
+
+Curiosamente o conjunto de dados não contém muitas avaliações para alguns filmes de Resident Evil. Por exemplo, os filmes Afterlife (2010) e Retribution (2012) são os que contém menos avaliações. Vejamos o gráfico abaixo.
+
+```{r}
+dados %>%
+    ggplot(aes(x = title, y = rating, color = title)) + 
+    geom_jitter(width = .1) +
+  ggtitle("Distribuição da avaliação dos filmes") +
+  ylab("Avaliação") +
+  xlab("Filme") +
+  theme(legend.position="none",
+        plot.title = element_text(hjust = 0.5))
+```
+
+Como iremos utilizar o conceito de intervalos de confiança para estimar a avaliação de um filme então é importante que o conjunto de dados possua várias observações. Os únicos filmes submetidos a análise serão: Apocalypse (2004), Extinction (2007) e Resident Evil (2002).
+
+```{r}
+dados = dados %>% 
+  filter(!(title %in% c("Afterlife (2010)",
+                        "Retribution (2012)")))
+```
+
+##  Qual dos episódios teve maior audiência? Qual a expectativa de audiência para cada um dos episódios de Resident Evil? Para qual deles há melhor audiência? E para qual há maior variação de audiência?
+
+Para responder cada uma das perguntas vamos precisar adotar um indicador de audiência e uma métrica de comparação da audiência. O indicador será, basicamente, o número de avaliação que cada episódio recebeu e a métrica de comparação a mediana de audiência.
+```{r}
+dados %>%
+    ggplot(aes(x = rating)) + 
+    geom_histogram(binwidth = .5, fill = "red", color = "black") + 
+    geom_rug() +
+  facet_grid(.~title)
+```
+
+Observando o gráfico acima fica claro que a liderança de audiência se dá em dois episódios, são eles: Apocalypse e Resident Evil. Curiosamente são os dois primeiros episódios lançados e fazem referência aos jogos de video game que consagraram o título e asseguraram uma legião de fãns que se segue até os dias atuais.
+
+```{r}
+dados2 = dados %>%
+  group_by(movieId, title, nGenre) %>%
+  summarise(views = n())
+
+dados2 %>%
+  ggplot(aes(x=title,y=views)) +
+  geom_col(fill = "red")
+```
+
+Quantificando as avaliações podemos quantificar as audiêcias de cada filme. O ranking de audiência tem Resident Evil em primeira posição, Apocalypse em segunda e Extinction em terceira.
+
+Podemos agora investigar qual a expectativa de audiência para cada episódio.
+
+```{r}
+b =  bootstrap((dados2 %>%
+  filter(title == "Extinction (2007)"))$views, median, R = 1000)
+
+m = CI.percentile(b, probs = c(.025, .975))
+m
+
+b =  bootstrap((dados2 %>%
+  filter(title == "Apocalypse (2004)"))$views, median, R = 1000)
+
+m = CI.percentile(b, probs = c(.025, .975))
+m
+
+```
+
