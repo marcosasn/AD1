@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.align = "center")
 library(ggplot2)
+library(plotly)
 library(GGally)
 library(dplyr)
 library(readr)
@@ -34,24 +35,24 @@ Normalmente os filmes têm vários gêneros. Existe uma relação entre em quant
 
 Lembre: não comece sua análise sem antes fazer um descritivo dos dados. Mostre esse descritivo ao leitor. Lide com outliers.
 
-# Avaliando a audiência dos filmes de Resident Evil 
-
-O suscesso dos filmes de Resident Evil já não é mais nenhuma novidade. Isso fica cada vez mais evidente pelo simples motivo de observar o empenho e a motivação dos diretores em inovarem e lançarem novos filmes desde o seu aparecimento no mundo dos jogos. Vamos estimar, a partir de uma amostra de opiniões do filme, os intervalos de valores que delineam a avaliação de cada filme. Utilizaremos os dados cedidos pelo site [GroupLens](http://grouplens.org/datasets/movielens/latest/).
-
-```{r}
+```{r, message=F, warning=F, results='hide'}
 movies = read_csv("../dados/movies.csv")
 ratings = read_csv("../dados/ratings.csv")
 genres = read_csv("../dados/movie-genre.csv")
-
-movies = movies %>% 
-  filter(grepl("Resident Evil", title))
-
-dados = merge(movies, ratings, by="movieId")
-
 genres = genres %>%
-  filter(grepl("Resident Evil", title)) %>%
   group_by(movieId, title) %>%
   summarise(nGenre = n())
+```
+
+# Mais filmes! Como se comportam as avaliações dos filmes de Resident Evil? 
+
+O suscesso dos filmes de Resident Evil já não é mais nenhuma novidade. Isso fica cada vez mais evidente pelo simples motivo de observar o empenho e a motivação dos diretores em inovarem e lançarem novos filmes desde o seu aparecimento no mundo dos jogos. Vamos estimar, a partir de uma amostra de opiniões do filme, os intervalos de valores que delineam a avaliação de cada filme. Utilizaremos os dados cedidos pelo site [GroupLens](http://grouplens.org/datasets/movielens/latest/).
+
+```{r, message=F, warning=F, results='hide'}
+re_movies = movies %>% 
+  filter(grepl("Resident Evil", title))
+
+dados = merge(re_movies, ratings, by="movieId")
 
 dados = merge(dados, genres, by=c("movieId","title")) %>%
   subset(select = -c(userId, timestamp, genres))
@@ -67,27 +68,28 @@ dados = dados %>%
                          which(title == "Resident Evil: Afterlife (2010)"), 
                          "Afterlife (2010)")) %>%
   mutate(title = replace(title, 
-                         which(title == "Resident Evil: Retribution (2012)"),                          "Retribution (2012)"))
-
+                         which(title == "Resident Evil: Retribution (2012)"),
+                         "Retribution (2012)"))
 ```
 
 ## Decisões sobre filtrar dados ou variáveis 
 
 Curiosamente o conjunto de dados não contém muitas avaliações para alguns filmes de Resident Evil. Por exemplo, os filmes Afterlife (2010) e Retribution (2012) são os que contém menos avaliações. Vejamos o gráfico abaixo.
-```{r}
-dados %>%
+
+```{r, message=F, warning=F}
+ggplotly(dados %>%
     ggplot(aes(x = title, y = rating, color = title)) + 
     geom_jitter(width = .1) +
   ggtitle("Distribuição da avaliação dos filmes") +
   ylab("Avaliação") +
   xlab("Filme") +
   theme(legend.position="none",
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5)))
 ```
 
 Como iremos utilizar o conceito de intervalos de confiança para estimar a avaliação de um filme então é importante que o conjunto de dados possua várias observações. Os únicos filmes submetidos a análise serão: Apocalypse (2004), Extinction (2007) e Resident Evil (2002).
 
-```{r}
+```{r, message=F, warning=F, results='hide'}
 dados = dados %>% 
   filter(!(title %in% c("Afterlife (2010)",
                         "Retribution (2012)")))
@@ -95,9 +97,9 @@ dados = dados %>%
 
 ##  Qual o episódio mais bem avaliado? Qual a expectativa de avaliação para cada um dos episódios de Resident Evil? Para qual deles há melhor avaliação? E para qual há mais variação nas avaliações?
 
-Antes de mais nada precisamos escolher a métrica de comparação, a métrica de comparação adotada será a mediana de avaliação. Para responder a primeira pergunta basta olhar para o gráfico abaixo.
-```{r}
-dados %>%
+Antes de mais nada precisamos escolher a métrica de comparação, a métrica de comparação adotada será a mediana de avaliação por não ser afetada ou enviesada por valores extremos ou outliers. Para responder a primeira pergunta basta olhar para o gráfico abaixo.
+```{r, message=F, warning=F}
+ggplotly(dados %>%
     ggplot(aes(x = title, y = rating, color = title)) + 
     geom_jitter(width = .1) +
   geom_boxplot() +
@@ -105,13 +107,13 @@ dados %>%
   ylab("Avaliação") +
   xlab("Filme") +
   theme(legend.position="none",
-        plot.title = element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5)))
 ```
 
-Observando o gráfico de box-plot, fica claro que tanto Extinction quanto Resident Evil ficam empatados. Ambos os episódios possuem a mediana de avaliação igual à 3.
+Os gráficos acima mostram vários valores calculadas a partir do conjunto de avaliações de cada filme. Os quadrados ou box's representam a distância interquartil (representam 50% das avaliações de cada episódio). As retas que cortam cada box são os valores de avaliação mediana para cada episódio. Observando o gráfico de box-plot, fica claro que tanto Extinction quanto Resident Evil ficam empatados. Ambos os episódios possuem a mediana de avaliação igual à 3.
 
 Sabendo disso, qual seria a expectativa de mediana de avaliação para cada um dos episódios acima?
-```{r}
+```{r, message=F, warning=F}
 bootstrap.mediana.extinction =  bootstrap(
   (dados %>% filter(title == "Extinction (2007)"))$rating, median, R = 1000)
 
@@ -156,4 +158,31 @@ A expectativa de avaliação pode ser observada logo acima. O episódio Resident
 
 Observando os intervalos de confiança para a mediana de avaliação de cada um dos episódios nada podemos concluir quanto qual dos episódios será o melhor ou maior avaliado. Quanto a variação podemos concluir que o episódio que mais pode variar em termos de mediana será o filme Apocalypse (2004).
 
-## Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem?
+# Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem?
+
+Será que existente relacionamento entre a quantidade de gêneros que cada filme possui e sua avaliação? Antes de mais nada foi necessário transformar os dados cedidos pelo site para um formato diferente. Uma nova tabela contém os filmes separados por um único gênero.
+
+```{r, message=F, warning=F}
+dados2 = merge(genres, ratings, by="movieId") %>%
+  subset(select = -c(userId, timestamp))
+
+dados3 = dados2 %>%
+  group_by(movieId, title, nGenre) %>%
+  summarise(medianRating = median(rating))
+
+df <- data.frame()
+
+for(i in 1:6){
+  b = bootstrap(subset(dados3, nGenre==i) , median(medianRating))
+  median.mv = CI.percentile(b, probs = c(.025, .975))
+  df <- data.frame(rbind(df, data.frame(median.mv)))
+}
+
+df$Generos = c(1,2,3,4,5,6)
+
+df %>% 
+  ggplot(aes(x = Generos, ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .1) +
+  labs(x="Quantidade de gêneros", y="Mediana")
+```
+
