@@ -16,23 +16,9 @@ library(resample)
 theme_set(theme_bw())
 ```
 
-Parte 1: você e um problema pequeno
-Dados de opiniões sobre filmes
+# O que esperar das avaliações dos filmes do site GroupLens?
 
-Para essa parte do problema usaremos dados sobre avaliações de filmes: http://grouplens.org/datasets/movielens/latest/ (Links para um site externo)Links para um site externo . Para essa parte do problema, usaremos o dataset small. Para a parte onde você escolhe a pergunta e conduz a investigação você escolhe qual dos datasets usar.
-
-Independente do dado que você usar, lembre que temos aqui apenas uma amostra das opiniões de todas as pessoas. Este problema trata com estimarmos a opinião que a audiência de um filme tem a partir dessa amostra.
-
-O que fazer
-
-Temos duas perguntas de pesquisa. Responda ambas em um relatório rmarkdown. Lembre de escrever uma frase com o vocabulário do domínio do problema explicando seu achado.
-
-
-Escolha uma trilogia (ou uma n-logia com n > 3) e avalie para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme. (Exemplos: Poderoso Chefão, Star Wars, Matrix, etc.)
-
-Normalmente os filmes têm vários gêneros. Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem? Mais especificamente: se consideramos a os filmes com 1, 2, 3 ... gêneros, existe alguma quantidade de gêneros num mesmo filme que em geral recebe avaliações melhores? Caso exista, estime a diferença entre essa combinação e filmes com apenas um gênero. (Repare que você terá que escolher que medida você comparará: média, mediana, etc.)
-
-Lembre: não comece sua análise sem antes fazer um descritivo dos dados. Mostre esse descritivo ao leitor. Lide com outliers.
+Vamos estimar, a partir de uma amostra de opiniões, os intervalos de valores que delineam as avaliações de filmes do site [GroupLens](http://grouplens.org/datasets/movielens/latest/).
 
 ```{r, message=F, warning=F, results='hide'}
 movies = read_csv("../dados/movies.csv")
@@ -43,12 +29,9 @@ genres = genres %>%
   summarise(nGenre = n())
 ```
 
-# Mais filmes! Como se comportam as avaliações dos filmes do site GroupLens?
-
 ## Quais os episódios de ouro de Resident Evil? 
 
-O suscesso dos filmes de Resident Evil já não é mais nenhuma novidade. Isso fica cada vez mais evidente pelo simples motivo de observar o empenho e a motivação dos diretores em inovarem e lançarem novos filmes desde o seu aparecimento no mundo dos jogos. Vamos estimar, a partir de uma amostra de opiniões do filme, os intervalos de valores que delineam a avaliação de cada filme. Utilizaremos os dados cedidos pelo site [GroupLens](http://grouplens.org/datasets/movielens/latest/).
-
+O suscesso dos filmes de Resident Evil já não é mais nenhuma novidade. Isso fica cada vez mais evidente pelo simples motivo de observar o empenho e a motivação dos diretores em inovarem e lançarem novos filmes desde o seu aparecimento no mundo dos jogos. 
 ```{r, message=F, warning=F, results='hide'}
 re_movies = movies %>% 
   filter(grepl("Resident Evil", title))
@@ -170,17 +153,27 @@ Será que existente relacionamento entre a quantidade de gêneros que cada filme
 
 ### Descritivo e decisões sobre filtrar dados ou variáveis 
 
+Curiosamente o conjunto de dados não contém muitas avaliações para certas quantidades de gêneros.
 ```{r}
 dados2 = merge(genres, ratings, by="movieId") %>%
   subset(select = -c(userId, timestamp))
 
-dados2 %>%
-  ggplot(aes(x = nGenre,
-             y = rating)) +
-  geom_point()
+ggplotly(dados2 %>%
+  ggplot(aes(x=nGenre,
+             y=rating,
+             color=as.character(nGenre))) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(1,10,1)) +
+  ggtitle("Distribuição da quantidade de gêneros dos filmes") +
+  ylab("Avaliação") +
+  xlab("Quantidade de gêneros") +
+  theme(legend.position="none",
+        plot.title = element_text(hjust = 0.5)))
 ```
 
-Curiosamente o conjunto de dados não contém muitas avaliações para certas quantidades de gêneros. Por exemplo, apesar de existirem filmes associados a 8 e a 10 gêneros cinematográficos, há poucas avaliações para estes filmes (1 avaliação) e portanto estes dados serão filtrados porque eles não são interessantes para serem aplicados aos intervalo de confiança.
+Apesar de existirem filmes associados a 8 e a 10 gêneros cinematográficos, há poucas avaliações para estes filmes (1 avaliação) e portanto estes dados serão filtrados porque eles não são interessantes para serem aplicados aos intervalos de confiança.
+
+Uma outra coisa importante a ser observada é que visualmente a distribuição das avaliações de cada quantidade de gênero não apresenta a existência de relacionamento entre as variáveis.
 
 ```{r, message=F, warning=F, results='hide'}
 bootf <- function(x) {
@@ -221,3 +214,5 @@ A expectativa de avaliação para cada quantidade pode ser observada logo acima.
 Observando os intervalos de confiança para a mediana de avaliação de cada quantidade de gênero nada podemos concluir quanto qual delas será a melhor ou maior avaliada, evidentemente, não podemos observar a existência de uma relação de quanto maior a quantidade de gênero melhor a avaliação. 
 
 Quanto a variação podemos concluir que os filmes com 4 e 5 gêneros cinematográficos mais pode variar em termos de mediana de avaliação.
+
+Copyright © 2017 [Marcos Nascimento](https://github.com/marcosasn/AD1/blob/master/problema4/R/prob4_cpoint1.Rmd)
