@@ -164,40 +164,46 @@ A expectativa de avaliação mediana pode ser observada logo acima. O episódio 
 
 Observando os intervalos de confiança para a mediana de avaliação de cada um dos episódios nada podemos concluir quanto qual dos episódios será o melhor ou maior avaliado. Quanto a variação podemos concluir que o episódio que mais pode variar em termos de mediana será o filme Apocalypse (2004).
 
-## Existe uma relação entre a quantidade de gêneros de um filme e a avaliação que estes recebem?
+## Existe uma relação entre a quantidade de gêneros de um filme e a avaliação que este recebe?
 
-Será que existente relacionamento entre a quantidade de gêneros que cada filme possui e sua avaliação? Antes de mais nada foi necessário transformar os dados cedidos pelo site para um formato diferente. Uma nova tabela contém os filmes separados por um único gênero.
+Será que existente relacionamento entre a quantidade de gêneros que cada filme possui e sua avaliação? Antes de mais nada foi necessário transformar os dados cedidos pelo site para um formato diferente. Uma nova tabela contém os filmes separados por um único gênero. Isso irá facilitar a contagem e associação da quantidade de gênero a cada filme.
 
-### Decisões sobre filtrar dados ou variáveis 
+### Descritivo e decisões sobre filtrar dados ou variáveis 
 
-Para calcular os intervalos de confiança para percebemos as estimativas paras as avaliações dos filmes, fiz o uso de uma função denominada *smean.cl.boot*. Esta função é provevinente da biblioteca **Rms** e é capaz de calcular simples intervalos de confiança facilmente.
-
-```{r, message=F, warning=F, results='hide'}
+```{r}
 dados2 = merge(genres, ratings, by="movieId") %>%
   subset(select = -c(userId, timestamp))
 
-library(rms)
-bootf <- function(x,var="rating") {
-    newstuff <- rbind(smean.cl.boot(x[[var]])) %>%
-         data.frame %>%
-         setNames(paste(var,c("mean","lwr","upr"),sep="_"))
+dados2 %>%
+  ggplot(aes(x = nGenre,
+             y = rating)) +
+  geom_point()
+```
+
+Curiosamente o conjunto de dados não contém muitas avaliações para certas quantidades de gêneros. Por exemplo, apesar de existirem filmes associados a 8 e a 10 gêneros cinematográficos, há poucas avaliações para estes filmes (1 avaliação) e portanto estes dados serão filtrados porque eles não são interessantes para serem aplicados aos intervalo de confiança.
+
+```{r, message=F, warning=F, results='hide'}
+bootf <- function(x) {
+    b =  bootstrap(x$rating, median, R = 1000)
+    m = CI.percentile(b, probs = c(.025, .975))
+    newstuff = rbind(m) %>%
+      data.frame()
     return(newstuff)
 }
 
 dados3 = dados2 %>%
+  filter(nGenre <= 7) %>%
   group_by(nGenre) %>%
-  do(bootf(.))
+  do(bootf(.)) %>%
+  setNames(c("nGenre","rating_lwr","rating_upr"))
 ```
-
-Curiosamente o conjunto de dados não contém muitas avaliações para certas quantidades de gêneros. Por exemplo, apesar de existirem filmes associados até 8 e até 10 gêneros cinematográficos, há poucas avaliações para estes filmes (1 avaliação) e portanto estes dados serão filtrados porque eles não são interessantes para serem aplicados ao intervalo de confiança.
 
 ### Qual a expectativa de avaliação para cada quantidade de gêneros? Para qual das quantidades há melhor avaliação? E para qual há mais variação nas avaliações?
 
-Antes de mais nada precisamos escolher a métrica de comparação, a métrica de comparação adotada será a mediana de avaliação por não ser afetada ou enviesada por valores extremos ou outliers.
+Antes de mais nada precisamos escolher a métrica de comparação, a métrica de comparação adotada será a mediana de avaliação por não ser afetada ou enviesada por valores extremos ou outliers. Os intervalos de confiança foram calculados para a mediana de avaliação de cada quantidade de gêneros de um filme.
 
 ```{r}
 dados3 %>%
-  filter(nGenre <= 7) %>%
   ggplot(aes(x = nGenre,
              ymin = rating_lwr,
              ymax = rating_upr,
@@ -210,24 +216,8 @@ dados3 %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
-A expectativa de avaliação para cada quantidade pode ser observada logo acima. Os filmes com quantidade de gêneros igual a 7, por exemplo, pode chegar a obter a mediana de avaliação entre 3.65 e 3.87 como podemos observar abaixo.
+A expectativa de avaliação para cada quantidade pode ser observada logo acima. Os filmes com quantidade de gêneros igual a 4 e 5, por exemplo, podem chegar a obter a mediana de avaliação entre 3.5 e 4, enquanto os filmes com quantidade 1, 2, 3, 6 e 7 podem atingir a mediana de avaliação mais alta (igual a 4).
 
-```{r}
+Observando os intervalos de confiança para a mediana de avaliação de cada quantidade de gênero nada podemos concluir quanto qual delas será a melhor ou maior avaliada, evidentemente, não podemos observar a existência de uma relação de quanto maior a quantidade de gênero melhor a avaliação. 
 
-dados3 %>%
-  filter(nGenre == 7) %>%
-  ggplot(aes(x = nGenre,
-             ymin = rating_lwr,
-             ymax = rating_upr,
-             color=as.character(nGenre))) + 
-  geom_errorbar(width = .1) +
-  scale_x_continuous(breaks = seq(1,7,1)) +
-  labs(x="Quantidade de gêneros", y="Mediana de avaliação") +
-  ggtitle("Intervalo de confiança da mediana de avaliação de cada quantidade de gêneros")+
-  theme(legend.position="none",
-        plot.title = element_text(hjust = 0.5))
-```
-
-Observando os intervalos de confiança para a mediana de avaliação de cada quantidade de gênero nada podemos concluir quanto qual delas será a melhor ou maior avaliada, evidentemente, não podemos observar a existência de uma relação. No entanto, podemos ver que os filmes que tiveram a quantidade de gêneros 3, 5, 6 e 7 podem atingir as medianas de avaliação mais altas embora a diferença possa parecer bem pequena. 
-
-Quanto a variação podemos concluir que os filmes com 8 gêneros cinematográficos mais pode variar em termos de mediana.
+Quanto a variação podemos concluir que os filmes com 4 e 5 gêneros cinematográficos mais pode variar em termos de mediana de avaliação.
