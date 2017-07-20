@@ -42,7 +42,7 @@ re_movies = movies %>%
   filter(grepl("Resident Evil", title)) %>%
   filter(!(title %in% c("Resident Evil: Afterlife (2010)",
                         "Resident Evil: Retribution (2012)")))
-dados = re_movies %>% 
+re_movies = re_movies %>% 
   mutate(title = replace(title,
                          which(title == "Resident Evil: Apocalypse (2004)"),
                          "Apocalypse (2004)")) %>%
@@ -60,8 +60,10 @@ Antes de mais nada podemos nos perguntar: como se comporta a distribuição de a
 ```{r message=F, warning=F}
 ggplotly(dados %>%
   ggplot(aes(x=as.character(userId),
-             y=rating)) +
-  geom_jitter(width = .1, color="red") +
+             y=rating,
+             color=as.character(userId))) +
+  geom_jitter(width = .1) +
+    geom_boxplot() +
   ggtitle("Distribuição da avaliação dos usuários") +
   ylab("Avaliação") +
   xlab("Usuário") +
@@ -69,13 +71,15 @@ ggplotly(dados %>%
         plot.title = element_text(hjust = 0.5)))
 ```
 
-Podemos observar no gráfico acima algumas coisas curiosas. A pior avaliação de Resident Evil foi do usuário de id 165 (0.5). As outras duas piores notas foram dos usuários 15 e 475 (1). Ainda sobre apenas dois usuários, 346 e 78, deram as notas mais altas (5).
+Podemos observar no gráfico acima algumas coisas curiosas. A pior avaliação de Resident Evil foi do usuário de id 165 (0.5). As outras duas piores notas foram dos usuários 15 e 475 (1). Apenas dois usuários, 346 e 78, deram as notas mais altas (5).
 
 Curiosamente o conjunto de dados também não contém muitas avaliações para cada um dos usuários do GroupLens.
 ```{r message=F, warning=F}
 ggplotly(dados %>%
-           ggplot(aes(x=as.character(userId))) +
-           geom_bar(width = .5, color="red", fill="red") +
+           ggplot(aes(x=as.character(userId),
+                      color=as.character(userId),
+                      fill=as.character(userId))) +
+           geom_bar(width = .5) +
   ggtitle("Distribuição da quantidade de avaliação dos usuários") +
     scale_y_continuous(breaks = seq(1,3,1)) +
   ylab("Quantidade") +
@@ -86,25 +90,28 @@ ggplotly(dados %>%
 
 Em maioria os telespectadores votaram apenas uma vez e a quantidade máxima de avaliação observada é 3. Como não é interessante estimarmos em cima de poucas observações então obviamente não devemos estimar valores para os telespectadores que votaram apenas uma vez. Esses valores serão filtrados.
 
-Você poderia estar imaginando: qual dos usuários forneceram as melhores avaliações? E as piores?
 ```{r}
-dados2 = dados %>%
-        group_by(userId) %>%
-  filter(n() > 1) %>%
-        summarise(nRating=n(), medianRating=median(rating))
+dados = dados %>%
+  group_by(userId) %>%
+  filter(n() > 1)
+```
 
-ggplotly(dados2 %>%
-           ggplot(aes(x=as.character(userId),
-                      y=medianRating)) +
-           geom_jitter( width =.1, color="red") +
-  ggtitle("Distribuição das avaliações dos usuários") +
-  ylab("Mediana de avaliação") +
+Você poderia estar imaginando: qual dos usuários, que votaram mais de uma vez, forneceram as melhores avaliações? E as piores?
+```{r}
+ggplotly(dados %>%
+  ggplot(aes(x=as.character(userId),
+             y=rating,
+             color=as.character(userId))) +
+  geom_jitter(width = .1) +
+    geom_boxplot() +
+  ggtitle("Distribuição da avaliação dos usuários") +
+  ylab("Avaliação") +
   xlab("Usuário") +
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5)))
 ```
 
-Em termos de mediana de avaliação podemos observar duas coisas importantes: os usuários que melhor avaliaram e os que pior avaliaram (usuários que votaram uma vez não foram incluídos). Apenas um usuário (usuário 78) melhor avaliou os filmes, mediana de avaliação igual à 4.7, e apenas um (usuário 475) pior avaliou, mediana de avaliação igual à 1.5.
+Em termos de mediana de avaliação podemos observar duas coisas importantes: os usuários que melhor avaliaram e os que pior avaliaram. Apenas o usuário de Id 78 melhor avaliou os filmes (4.5), e apenas o usuário 475 pior avaliou os filmes (1.5).
 
 ### Qual dos telespectadores de Resident Evil mais bem avalia os filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
 
@@ -117,32 +124,30 @@ bootf <- function(x) {
     return(newstuff)
 }
 
-dados3 = dados %>%
+dados.ci = dados %>%
   group_by(userId) %>%
-  filter(n() > 1) %>%
   do(bootf(.)) %>%
   setNames(c("userId","rating_lwr","rating_upr"))
-
 ```
 Qual seria a expectativa de mediana de avaliação para cada um dos telespectadores de Resident Evil?
 ```{r message=F, warning=F}
-dados3 %>%
+dados.ci %>%
   ggplot(aes(x = as.character(userId),
              ymin = rating_lwr,
              ymax = rating_upr,
              color=as.character(userId))) + 
   geom_errorbar(width = .1) +
-  labs(x="Id do usuário", y="Mediana de avaliação") +
+  labs(x="Usuário", y="Mediana de avaliação") +
   ggtitle("Intervalo de confiança da mediana de avaliação de cada usuário")+
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5))
 ```
 
-A expectativa de avaliação mediana pode ser observada logo acima. O usuário 78, por exemplo, pode chegar a obter tanto a mediana de avaliação 4.5 quanto 5 e também seria o único que poderia obter a maior mediana de avaliação se comparado com os demais intervalos de confiança.
+A expectativa de avaliação mediana pode ser observada logo acima. O usuário 78, por exemplo, pode fornecer a mediana de avaliação aos episódios de Resident Evil variando entre 4.5 e 5. Em adicional também seria o único que poderia fornecer a maior mediana de avaliação se comparado com os intervalos de confiança dos demais usuários.
 
-Quanto a variação podemos concluir que tanto o usuário 199 quanto o usuário 384, podem ser os campeões em variação.
+Quanto a variação podemos concluir que tanto o usuário 199 quanto o usuário 384, podem ser os campeões em variação de mediana de avaliação na hora de avaliar os episódios.
 
-## Qual dos telespectadores mais bem avalia os filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
+## O que esperar dos telespectadores em termos de avaliação dos filmes?
 
 Agora de uma forma mais geral qual dos telespectadores mais bem avalia os filmes do GroupLens. Quem são os usuários e como eles votam? Quais suas avaliações?
 
@@ -181,6 +186,8 @@ ggplotly(x %>%
         plot.title = element_text(hjust = 0.5)))
 ```
 
+### Qual dos telespectadores mais bem avalia os filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
+
 ```{r}
 dados2 = dados %>%
   group_by(userId) %>%
@@ -200,8 +207,64 @@ dados2 %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
-## Quais os gêneros de filmes mais bem avaliados?
+## O que esperar dos telespectadores em termos de avaliação dos gêneros de filmes?
 
 ```{r}
-
+genres = read_csv("../dados/movie-genre.csv")
+dados = merge(genres, ratings, by="movieId") %>%
+  subset(select = -c(movieId, title, userId, timestamp))
+x= dados %>%
+  group_by(genre) %>%
+  summarise(nRating=n(), medianRating=median(rating))
 ```
+
+### Descritivo e decisões sobre filtrar dados ou variáveis 
+
+```{r}
+x = x %>% filter(genre != '(no genres listed)')
+
+ggplotly(x %>%
+  ggplot(aes(x=genre,
+             y=nRating)) +
+  geom_jitter(width = .1, color="red") +
+  ggtitle("Distribuição da quantidade de avaliação dos gêneros") +
+  ylab("Quantidade") +
+  xlab("Gênero") +
+  theme(legend.position="none",
+        plot.title = element_text(hjust = 0.5)))
+```
+
+```{r}
+ggplotly(x %>%
+  ggplot(aes(x=genre,
+             y=medianRating)) +
+  geom_jitter(width = .1, color="red") +
+  ggtitle("Distribuição da avaliação dos gêneros") +
+  ylab("Mediana de avaliação") +
+  xlab("Gênero") +
+  theme(legend.position="none",
+        plot.title = element_text(hjust = 0.5)))
+```
+
+### Qual dos gêneros é mais bem avaliado nos filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
+
+```{r}
+dados2 = dados %>%
+  filter(genre != '(no genres listed)') %>%
+  group_by(genre) %>%
+  do(bootf(.)) %>%
+  setNames(c("genre","rating_lwr","rating_upr"))
+```
+
+```{r}
+dados2 %>%
+  ggplot(aes(x = genre,
+             ymin = rating_lwr,
+             ymax = rating_upr)) + 
+  geom_errorbar(width = .1) +
+  labs(x="Gênero", y="Mediana de avaliação") +
+  ggtitle("Intervalo de confiança da mediana de avaliação de cada gênero")+
+  theme(legend.position="none",
+        plot.title = element_text(hjust = 0.5))
+```
+
