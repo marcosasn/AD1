@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=8, fig.height=6)
 library(ggplot2)
 library(plotly)
 library(GGally)
@@ -149,118 +150,150 @@ Quanto a variação podemos concluir que tanto o usuário 199 quanto o usuário 
 
 ## O que esperar dos telespectadores em termos de avaliação dos filmes?
 
-Agora de uma forma mais geral qual dos telespectadores mais bem avalia os filmes do GroupLens. Quem são os usuários e como eles votam? Quais suas avaliações?
+Agora de uma forma mais geral, qual dos telespectadores mais bem avalia os filmes do GroupLens? Quem são os usuários e como eles votam? Quais suas avaliações?
 
 ```{r}
 dados = ratings %>%
   subset(select = -c(movieId,timestamp))
-# get randomized data using "sample_n(df, 10)"
-x= dados %>%
-  group_by(userId) %>%
-  summarise(nRating=n(), medianRating=median(rating))
 ```
 
 ### Descritivo e decisões sobre filtrar dados ou variáveis 
-Antes de mais nada podemos nos perguntar: como se comporta a distribuição de avaliação de cada um dos usuários?
+
+O conjunto de dados contém muitas avaliações para cada um dos usuários do GroupLens mas em que ordem de magnitude estão essas quantidades?
 ```{r message=F, warning=F}
-ggplotly(x %>%
+ggplotly(dados %>%
   ggplot(aes(x=as.character(userId),
-             y=nRating)) +
-  geom_jitter(width = .1, color="red") +
+             color=as.character(userId))) +
+  geom_bar() +
   ggtitle("Distribuição da quantidade de avaliação dos usuários") +
-  ylab("Quantidade") +
+  ylab("Quantidade de avaliações") +
   xlab("Usuário") +
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5)))
 ```
 
+A ordem de magnitude varia muito e vão de centenas até a casa de milhar. Alguns usuários avaliaram menos de 500 vezes enquanto que outros avaliaram mais de 2000 vezes. A quantidade máxima de avaliações (2391) é observada pelo usuário de Id 547. Este usuário não está sozinho, há outros 4 usuários que tamém se destacam bastante em quantidade de avaliações. 
+
+Como o nosso conjunto de dados contém muitas avaliações e não é interessante estimarmos em cima de poucas avaliações vamos filtrar os usuários que avaliaram pelo menos 1000 vezes. É importante obter estimativas para os usuários mais assíduos.
 ```{r}
-ggplotly(x %>%
+dados = dados %>%
+  group_by(userId) %>%
+  filter(n() >= 1000)
+```
+
+Você poderia estar imaginando: qual dos usuários, que mais votaram, forneceram as melhores avaliações? E as piores?
+
+```{r}
+ggplotly(dados %>%
   ggplot(aes(x=as.character(userId),
-             y=medianRating)) +
-  geom_jitter(width = .1, color="red") +
+             y=rating,
+             color=as.character(userId))) +
+    geom_boxplot() +
   ggtitle("Distribuição da avaliação dos usuários") +
-  ylab("Mediana de avaliação") +
+  ylab("Avaliação") +
   xlab("Usuário") +
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5)))
 ```
+
+Observando os usuários que votaram pelo menos 1000 vezes podemos observar que os que forneceram as melhores avaliações, em termos de mediana, foram dois usuários (Ids 30 e 564). E os que pior avaliaram foram 3, por exemplo, usuário de Id 15.  
 
 ### Qual dos telespectadores mais bem avalia os filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
 
 ```{r}
-dados2 = dados %>%
+dados.ci = dados %>%
   group_by(userId) %>%
   do(bootf(.)) %>%
   setNames(c("userId","rating_lwr","rating_upr"))
 ```
-
+Qual seria a expectativa de mediana de avaliação para cada um dos telespectadores?
 ```{r}
-dados2 %>%
+dados.ci %>%
   ggplot(aes(x = as.character(userId),
              ymin = rating_lwr,
-             ymax = rating_upr)) + 
+             ymax = rating_upr,
+             color=as.character(userId))) + 
   geom_errorbar(width = .1) +
-  labs(x="Id do usuário", y="Mediana de avaliação") +
+  labs(x="Usuário", y="Mediana de avaliação") +
   ggtitle("Intervalo de confiança da mediana de avaliação de cada usuário")+
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5))
 ```
 
+A expectativa de avaliação mediana pode ser observada logo acima. Em geral a expectativa é positiva, espera-se que os telespectadores cheguem a obter mediana de avaliações de pelo menos 3.
+
+Como podemos observar na disposição dos intervalos de confiança os telespectadores que vão mais bem avaliar os filmes (4) são os usuários de Id 564 e 30. 
+
+Quanto a variação podemos concluir que apenas um dos telespectadores podem chegar a variar o valor de mediana de avaliação, o usuário de Id 15. Curiosamente é também o usuário que pode chegar a obter mediana de avaliação mais baixa entre os usuários mais participativos.
+
 ## O que esperar dos telespectadores em termos de avaliação dos gêneros de filmes?
 
-```{r}
+Será que existe um gênero preferido dos telespectadores? Quais os gêneros mais bem avaliados dos filmes do GroupLens? Quem os gêneros e como eles são votados? Quais suas avaliações?
+
+```{r message=F, warning=F, results='hide'}
 genres = read_csv("../dados/movie-genre.csv")
 dados = merge(genres, ratings, by="movieId") %>%
   subset(select = -c(movieId, title, userId, timestamp))
-x= dados %>%
-  group_by(genre) %>%
-  summarise(nRating=n(), medianRating=median(rating))
 ```
 
 ### Descritivo e decisões sobre filtrar dados ou variáveis 
 
+Inicialmente há algumas avaliações associadas a filmes que não contém gênero. Estas avaliações serão filtradas.
 ```{r}
-x = x %>% filter(genre != '(no genres listed)')
+dados = dados %>% filter(genre != "(no genres listed)")
+```
 
-ggplotly(x %>%
+O conjunto de dados contém muitas avaliações para cada um dos gêneros dos filmes do GroupLens mas em que ordem de magnitude estão essas quantidades?
+```{r}
+ggplotly(dados %>%
   ggplot(aes(x=genre,
-             y=nRating)) +
-  geom_jitter(width = .1, color="red") +
+             color=genre,
+             fill=genre)) +
+  geom_bar() +
   ggtitle("Distribuição da quantidade de avaliação dos gêneros") +
-  ylab("Quantidade") +
+  ylab("Quantidade de avaliações") +
   xlab("Gênero") +
   theme(legend.position="none",
-        plot.title = element_text(hjust = 0.5)))
+        plot.title = element_text(hjust = 0.5)), width = 900)
 ```
 
+A ordem de magnitude varia muito na casa de milhar. Alguns gêneros foram avaliados menos de 10000 vezes enquanto que outros foram mais de 30000 vezes. A quantidade máxima de avaliações (43684) é observada pelo gênero de drama. Este gênero não está sozinho e é acompanhado por outros 3 gêneros que tamém se destacam bastante em quantidade de avaliações.
+
+Observando agora apenas os gêneros de drama, comédia e ação: como se comportam a distribuição de avaliações desses gêneros?
+
 ```{r}
-ggplotly(x %>%
+dados = dados %>% 
+  filter(genre %in% c("Comedy", "Drama", "Action"))
+
+ggplotly(dados %>%
   ggplot(aes(x=genre,
-             y=medianRating)) +
-  geom_jitter(width = .1, color="red") +
+             y=rating,
+             color=genre)) +
+    geom_boxplot() +
   ggtitle("Distribuição da avaliação dos gêneros") +
-  ylab("Mediana de avaliação") +
+  ylab("Avaliação") +
   xlab("Gênero") +
   theme(legend.position="none",
-        plot.title = element_text(hjust = 0.5)))
+        plot.title = element_text(hjust = 0.5)), width = 900)
 ```
+
+Observando o gráfico acima podemos observar que além de ser o gênero que contém mais avaliações, o gênero de drama é também o gênero que contém maior avaliação em termos de mediana (4).
 
 ### Qual dos gêneros é mais bem avaliado nos filmes? Para qual deles há melhor avaliação? E para qual há maior variação de avaliação?
 
 ```{r}
-dados2 = dados %>%
-  filter(genre != '(no genres listed)') %>%
+dados.ci = dados %>%
   group_by(genre) %>%
   do(bootf(.)) %>%
   setNames(c("genre","rating_lwr","rating_upr"))
 ```
-
+Qual seria a expectativa de mediana de avaliação para cada um dos gêneros listados acima?
 ```{r}
-dados2 %>%
+dados.ci %>%
   ggplot(aes(x = genre,
              ymin = rating_lwr,
-             ymax = rating_upr)) + 
+             ymax = rating_upr,
+             color= genre)) + 
   geom_errorbar(width = .1) +
   labs(x="Gênero", y="Mediana de avaliação") +
   ggtitle("Intervalo de confiança da mediana de avaliação de cada gênero")+
@@ -268,3 +301,6 @@ dados2 %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
+A expectativa de avaliação mediana pode ser observada logo acima. Espera-se que a mediana de avaliação dos gêneros ação e comédia seja 3.5 enquanto a do gênero drama seja 4.
+
+Como podemos observar na disposição dos intervalos de confiança o gênero mais bem avaliado é o de drama (4). Quanto a variação podemos concluir que nenhum dos gêneros podem chegar a variar o valor de mediana de avaliação.
