@@ -32,7 +32,7 @@ genres = genres %>%
 
 ##  O que esperar dos telespectadores em termos de avaliação de Resident Evil?
 
-Ainda sobre o suscesso dos filmes de Resident Evil queremos saber o que esperar em termos de avaliação dos usuários do GroupLens. Quem são os usuários e como eles votam? Quais suas avaliações?
+Ainda sobre o sucesso dos filmes de Resident Evil queremos saber o que esperar em termos de avaliação dos usuários do GroupLens. Quem são os usuários e como eles votam? Quais suas avaliações?
 
 ```{r, message=F, warning=F, results='hide'}
 re_movies = movies %>% 
@@ -59,11 +59,11 @@ ggplotly(dados %>%
         plot.title = element_text(hjust = 0.5)))
 ```
 
-Os gráficos acima mostram vários valores calculados a partir do conjunto de avaliações de cada usuário. Os quadrados ou box's representam a distância interquartil (representam 50% das avaliações de cada episódio). As retas que cortam cada box são os valores de avaliação mediana para cada episódio.
+Os gráficos acima mostram vários valores calculados a partir do conjunto de avaliações de cada usuário. Os quadrados ou box's representam a distância interquartil (representam 50% das avaliações). As retas que cortam cada box são os valores de avaliação mediana.
 
-Podemos observar no gráfico acima algumas coisas curiosas. A pior avaliação de Resident Evil foi do usuário de id 165 (0.5). As outras duas piores notas foram dos usuários 15 e 475 (1). Apenas dois usuários, 346 e 78, deram as notas mais altas (5).
+Podemos observar no gráfico acima algumas coisas curiosas. A pior avaliação de Resident Evil foi do usuário de id 165 (0.5). As outras duas piores notas foram dos usuários 15 e 475 (1). Apenas dois usuários, 346 e 78, deram a nota mais alta (5).
 
-Em termos de mediana de avaliação podemos observar duas coisas importantes no que compete a comparação: os usuários que melhor avaliaram e os que pior avaliaram. Apenas o usuário de Id 78 melhor avaliou os filmes (4.75), e apenas o usuário 475 pior avaliou os filmes (2).
+Em termos de mediana de avaliação podemos observar duas coisas importantes no que compete a comparação dos telespectadores: os usuários que melhor avaliaram e os que pior avaliaram. Apenas o usuário de Id 78 melhor avaliou os filmes (4.75) e apenas o usuário 475 pior avaliou os filmes (2).
 
 ```{r message=F, warning=F}
 ggplotly(dados %>%
@@ -71,7 +71,7 @@ ggplotly(dados %>%
                       color=as.character(userId),
                       fill=as.character(userId))) +
            geom_bar(width = .5) +
-  ggtitle("Distribuição da quantidade de avaliação dos usuários") +
+  ggtitle("Distribuição da quantidade de avaliações dos usuários") +
     scale_y_continuous(breaks = seq(1,3,1)) +
   ylab("Quantidade") +
   xlab("Usuário") +
@@ -79,13 +79,13 @@ ggplotly(dados %>%
         plot.title = element_text(hjust = 0.5)))
 ```
 
-Em maioria os telespectadores votaram apenas uma vez e a quantidade máxima de avaliação observada é 3.
+Como podemos observar no gráfico acima, a maioria dos telespectadores votaram apenas uma vez e a quantidade máxima de avaliações observada é 3.
 
 ### Estimando a avaliação dos telespectadores de Resident Evil
 
-Qual seria a avaliação dos telespectadores de Resident Evil no site? Vamos estimar a mediana de avaliação populacional utilizando como métrica amostral a mediana de avaliação e a técnica de *bootstrap*. 
+Qual seria a avaliação dos telespectadores de Resident Evil no site? Vamos estimar a mediana de avaliação populacional utilizando como métrica amostral a mediana de avaliação, juntamente com a técnica de *bootstrap*. 
 
-A mediana é uma medida que não é afetada ou enviesada por valores extremos ou outliers isso irá deixar a análise mais justa. A técnica de bootstrap vai auxiliar no processo de re amostragem e cálculo do intervalo de confiança para a avaliação mediana. Iremos utilizar a 2000 replicações no processo de re amostragem e nível de confiança de 95%.
+Você pode estar se perguntando: porque a mediana? A resposta é simples: a mediana é uma métrica que não é afetada ou enviesada por valores extremos ou *outliers* e também é uma métrica de tendência central dos dados. A técnica de *bootstrap* vai auxiliar no processo de reamostragem e cálculo do intervalo de confiança para a avaliação mediana populacional. Iremos utilizar 2000 replicações no processo de reamostragem e nível de confiança de 95%.
 
 ```{r message=F, warning=F}
 bootf <- function(x) {
@@ -108,17 +108,18 @@ dados.ci %>%
              ymax = rating_upr,
              color=as.character("Usuários"))) + 
   geom_errorbar(width = .1) +
-  labs(x="Usuário", y="Mediana de avaliação") +
+  labs(x="Usuário",
+       y="Mediana de avaliação") +
   ggtitle("Intervalo de confiança da mediana de avaliação")+
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5))
 ```
 
-Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação populacional de telespectadores dos filmes de Resident Evil no site GroupLens está entre 2.5 e 3.5.
+Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação populacional dos telespectadores dos filmes de Resident Evil no site GroupLens está entre 2.5 e 3.5.
 
-## O que esperar dos telespectadores em termos de avaliação?
+## O que esperar dos telespectadores em termos de avaliação de todos os filmes?
 
-No tópico anterior estimamos a mediana de avaliação populacional dos telespectadores de Resident Evil e agora, de uma forma mais geral, vamos estimar a mediana de avaliação dos telespectadores de todos os filmes.
+No tópico anterior estimamos a mediana de avaliação populacional dos telespectadores de Resident Evil e agora, de uma forma mais geral, vamos estimar a mediana de avaliação populacional dos telespectadores de todos os filmes.
 
 ```{r}
 dados = ratings %>%
@@ -133,20 +134,21 @@ ggplotly(dados %>%
   ggplot(aes(x=as.character(userId),
              color=as.character(userId))) +
   geom_bar() +
-  ggtitle("Distribuição da quantidade de avaliação dos usuários") +
+  ggtitle("Distribuição da quantidade de avaliações dos usuários") +
   ylab("Quantidade de avaliações") +
   xlab("Usuário") +
   theme(legend.position="none",
         plot.title = element_text(hjust = 0.5)))
 ```
 
-A ordem de magnitude varia muito e vão de centenas até a casa de milhar. Alguns usuários avaliaram menos de 500 vezes enquanto que outros avaliaram mais de 2000 vezes. A quantidade máxima de avaliações (2391) é observada pelo usuário de Id 547. Este usuário não está sozinho, há outros 4 usuários que tamém se destacam bastante em quantidade de avaliações. 
+A ordem de magnitude varia muito e vão de centenas até a casa de milhar. Alguns usuários avaliaram menos de 500 filmes enquanto que outros avaliaram mais de 2000. A quantidade máxima de avaliações (2391) é observada pelo usuário de Id 547. Este usuário não está sozinho, há outros 4 usuários que também se destacam bastante em quantidade de avaliações. 
 
 ### Estimando a avaliação dos telespectadores de todos os filmes
 
-Qual seria a avaliação dos telespectadores de todos os filmes do site? Vamos estimar a avaliação dos filmes utilizando a mediana de avaliação e a técnica de bootstrap. 
+Qual seria a avaliação dos telespectadores de todos os filmes do site? Vamos estimar a mediana de avaliação populacional utilizando como métrica amostral a mediana de avaliação juntamente com a técnica de bootstrap.
 
-A mediana é uma medida que não é afetada ou enviesada por valores extremos ou outliers isso irá deixar a análise mais justa. A técnica de bootstrap vai auxiliar no processo de re amostragem e cálculo do intervalo de confiança para a avaliação mediana. Iremos utilizar a 2000 replicações no processo de re amostragem e nível de confiança de 95%.
+Se segue o mesmo motivo da seção anterior para a escolha da mediana. Novamente utilizaremos a técnica de *bootstrap* com número de replicações igual a 2000 e nível de confiança de 95%.
+
 ```{r}
 dados.ci = dados %>%
   do(bootf(.)) %>%
@@ -164,11 +166,11 @@ dados.ci %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
-Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação populacional de telespectadores de todos os filmes do site GroupLens é 4.
+Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação populacional dos telespectadores de todos os filmes do site GroupLens é 4.
 
-## O que esperar dos telespectadores em termos de avaliação dos gêneros de filmes?
+## O que esperar dos telespectadores em termos de avaliação dos gêneros dos filmes?
 
-Será que existe um gênero preferido dos telespectadores? Quais os gêneros mais bem avaliados dos filmes do GroupLens? Quais os gêneros e como eles são votados? Quais suas avaliações? Vamos estimar a mediana de avaliação populacional dos usuários do site GroupLens dos dois gêneros mais votados.
+Será que existe um gênero preferido dos telespectadores? Quais suas avaliações? Qual deles é o mais bem avaliado? Vamos estimar a mediana de avaliação populacional dos dois gêneros mais avaliados.
 
 ```{r message=F, warning=F, results='hide'}
 genres = read_csv("../dados/movie-genre.csv")
@@ -183,14 +185,14 @@ Inicialmente há algumas avaliações associadas a filmes que não contém gêne
 dados = dados %>% filter(genre != "(no genres listed)")
 ```
 
-O conjunto de dados contém muitas avaliações para cada um dos gêneros dos filmes do GroupLens mas em que ordem de magnitude estão essas quantidades?
+O conjunto de dados contém muitas avaliações para cada um dos gêneros dos filmes mas em que ordem de magnitude estão essas quantidades?
 ```{r}
 ggplotly(dados %>%
   ggplot(aes(x=genre,
              color=genre,
              fill=genre)) +
   geom_bar() +
-  ggtitle("Distribuição da quantidade de avaliação dos gêneros") +
+  ggtitle("Distribuição da quantidade de avaliações dos gêneros") +
   ylab("Quantidade de avaliações") +
   xlab("Gênero") +
   theme(legend.position="none",
@@ -199,7 +201,7 @@ ggplotly(dados %>%
 
 A ordem de magnitude varia muito na casa de milhar. Alguns gêneros foram avaliados menos de 10000 vezes enquanto que outros foram mais de 30000 vezes. A quantidade máxima de avaliações (43684) é observada pelo gênero de drama. Este gênero não está sozinho e é acompanhado por outros 3 gêneros que tamém se destacam bastante em quantidade de avaliações.
 
-Observando agora apenas os gêneros de drama e comédia: como se comportam a distribuição de avaliações desses gêneros?
+Observando agora apenas os gêneros de drama e comédia (dois gêneros mais avaliados): como se comportam a distribuição de avaliações desses gêneros?
 ```{r}
 dados = dados %>% 
   filter(genre %in% c("Comedy", "Drama"))
@@ -216,21 +218,19 @@ ggplotly(dados %>%
         plot.title = element_text(hjust = 0.5)))
 ```
 
-Observando o gráfico acima podemos observar que além de ser o gênero que contém mais avaliações, o gênero de drama é também o gênero que contém maior avaliação em termos de mediana (4).
+Observando o gráfico acima podemos observar que além de ser o gênero que contém mais avaliações, o gênero de drama é também o gênero que contém maior avaliação em termos de mediana (4), se comparado ao segundo gênero que contém mais avaliações.
 
 ### Estimando a avaliação dos telespectadores dos filmes de comédia e drama
 
-Qual seria a avaliação dos telespectadores dos filmes de comédia e drama? Vamos estimar a avaliação dos gêneros utilizando a mediana de avaliação e a técnica de bootstrap.
+Qual seria a avaliação dos telespectadores dos filmes de comédia e drama? Vamos estimar a mediana de avaliação populacional dos gêneros de comédia e drama utilizando como métrica amostral a mediana de avaliação juntamente com a técnica de *bootstrap*.
 
-A mediana é uma medida que não é afetada ou enviesada por valores extremos ou outliers, isso irá deixar a análise mais justa. A técnica de bootstrap vai auxiliar no processo de re amostragem e cálculo do intervalo de confiança para a avaliação mediana. Iremos utilizar a 2000 replicações no processo de re amostragem e nível de confiança de 95%.
+Se segue o mesmo motivo da primeira seção para a escolha da mediana. Novamente utilizaremos a técnica de *bootstrap* com número de replicações igual a 2000 e nível de confiança de 95%.
 ```{r}
 dados.ci = dados %>%
   group_by(genre) %>%
   do(bootf(.)) %>%
   setNames(c("genre","rating_lwr","rating_upr"))
-```
-Qual seria a expectativa de mediana de avaliação para cada um dos gêneros listados acima?
-```{r}
+
 dados.ci %>%
   ggplot(aes(x = genre,
              ymin = rating_lwr,
@@ -244,4 +244,6 @@ dados.ci %>%
         plot.title = element_text(hjust = 0.5))
 ```
 
-Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação populacional do gênero comédia dos telespectadores de todos os filmes do site GroupLens é 3.5 e que a mediana de avaliação para a mesma população do gênero drama é 4.
+Observando o gráfico acima podemos concluir com 95% de confiança que a mediana de avaliação do gênero comédia da população é de 3.5 e que a mediana de avaliação do gênero drama é 4. Podemos conluir ainda que a população dos usuários do GroupLens melhor avalia o gênero drama do que o gênero comédia.
+
+Copyright © 2017 [Marcos Nascimento](https://github.com/marcosasn/AD1/blob/master/problema4/R/prob4_cpoint2.Rmd)
